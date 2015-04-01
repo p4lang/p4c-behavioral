@@ -41,7 +41,7 @@ enum P4LogLevel_t {
 typedef i32 SessionHandle_t
 struct DevTarget_t {
   1: required byte dev_id;
-  2: required i16 port_id;
+  2: required i16 dev_pipe_id;
 }
 
 //:: def get_type(byte_width):

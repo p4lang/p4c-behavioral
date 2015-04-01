@@ -94,3 +94,9 @@ p4_pd_status_t
 p4_pd_complete_operations(p4_pd_sess_hdl_t shdl) {
   return 0;
 }
+
+uint16_t
+p4_pd_dev_port_to_pipe_id(uint16_t dev_port_id)
+{
+    return ((dev_port_id >> 7) & 0x3);
+}
