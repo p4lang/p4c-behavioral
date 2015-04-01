@@ -1,0 +1,4 @@
+recursive-include p4c_bm *.h
+recursive-include p4c_bm *.c
+recursive-include p4c_bm *.cpp
+recursive-include p4c_bm *.thrift

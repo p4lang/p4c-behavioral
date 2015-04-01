@@ -1,0 +1,22 @@
+{
+    "meta_mappings": {
+	"standard_metadata" : {
+	    "ingress_port" : "standard_metadata_ingress_port",
+	    "egress_port" : "standard_metadata_egress_port",
+	    "clone_spec" : "standard_metadata_clone_spec",
+	    "egress_spec" : "standard_metadata_egress_spec",
+	    "packet_length" : "standard_metadata_packet_length",
+	    "instance_type" : "standard_metadata_instance_type"
+	},
+	"intrinsic_metadata" : {
+            "lf_field_list": "intrinsic_metadata_lf_field_list"
+	},
+	"pre_metadata" : {
+            "eg_mcast_group": "intrinsic_metadata_eg_mcast_group",
+            "replication_id": "intrinsic_metadata_replication_id"
+	}
+    },
+    "meta_carry" : [
+	"standard_metadata"
+    ]
+}
