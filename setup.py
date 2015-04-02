@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name = 'p4c_behavioral',
-    version = '0.9.3',
+    version = '0.9.4',
     install_requires=['pyyaml'],
     packages=['p4c_bm', 'p4c_bm/util', 'p4c_bm/tenjin',],
     include_package_data = True,
