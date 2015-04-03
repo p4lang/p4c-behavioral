@@ -589,6 +589,7 @@ ${name}
  ${param_str}
 )
 {
+  p4_pd_ms_del_grp(&ms_${act_prof}_state, 0, grp_hdl);
   return action_profiles_delete_group(RMT_ACT_PROF_${act_prof}, grp_hdl);
 }
 

@@ -55,7 +55,7 @@ void p4_pd_ms_init(void) {
 }
 
 int p4_pd_ms_add_mbr_to_grp(p4_pd_ms_table_state_t *state, uint8_t dev_id,
-			 p4_pd_mbr_hdl_t mbr_hdl, p4_pd_grp_hdl_t grp_hdl) {
+			    p4_pd_mbr_hdl_t mbr_hdl, p4_pd_grp_hdl_t grp_hdl) {
   PWord_t PValue;
   JLG(PValue, state->devices_mbr_to_grp_list[dev_id], mbr_hdl);
   int Rc_int;
@@ -65,7 +65,7 @@ int p4_pd_ms_add_mbr_to_grp(p4_pd_ms_table_state_t *state, uint8_t dev_id,
 }
 
 int p4_pd_ms_del_mbr_from_grp(p4_pd_ms_table_state_t *state, uint8_t dev_id,
-			   p4_pd_mbr_hdl_t mbr_hdl, p4_pd_grp_hdl_t grp_hdl) {
+			      p4_pd_mbr_hdl_t mbr_hdl, p4_pd_grp_hdl_t grp_hdl) {
   PWord_t PValue;
   JLG(PValue, state->devices_mbr_to_grp_list[dev_id], mbr_hdl);
   int Rc_int;
@@ -75,11 +75,11 @@ int p4_pd_ms_del_mbr_from_grp(p4_pd_ms_table_state_t *state, uint8_t dev_id,
 }
 			  
 void p4_pd_ms_mbr_apply_to_grps(p4_pd_ms_table_state_t *state, uint8_t dev_id,
-			     p4_pd_mbr_hdl_t mbr_hdl,
-			     PDMSGrpFn grp_fn, void *aux) {
+				p4_pd_mbr_hdl_t mbr_hdl,
+				PDMSGrpFn grp_fn, void *aux) {
   PWord_t PValue;
   JLG(PValue, state->devices_mbr_to_grp_list[dev_id], mbr_hdl);
-  Word_t Index;
+  Word_t Index = 0;
   int Rc_int;
   Pvoid_t *jarray_grps = (Pvoid_t *) PValue;
   J1F(Rc_int, *jarray_grps, Index);
@@ -90,14 +90,14 @@ void p4_pd_ms_mbr_apply_to_grps(p4_pd_ms_table_state_t *state, uint8_t dev_id,
 }
 
 void p4_pd_ms_new_mbr(p4_pd_ms_table_state_t *state, uint8_t dev_id,
-		   p4_pd_mbr_hdl_t mbr_hdl) {
+		      p4_pd_mbr_hdl_t mbr_hdl) {
   PWord_t PValue;
   JLI(PValue, state->devices_mbr_to_grp_list[dev_id], mbr_hdl);
   assert(!(*PValue));
 }
 
 void p4_pd_ms_del_mbr(p4_pd_ms_table_state_t *state, uint8_t dev_id,
-		   p4_pd_mbr_hdl_t mbr_hdl) {
+		      p4_pd_mbr_hdl_t mbr_hdl) {
   PWord_t PValue;
   JLG(PValue, state->devices_mbr_to_grp_list[dev_id], mbr_hdl);
   Word_t num_freed;
@@ -110,29 +110,44 @@ void p4_pd_ms_del_mbr(p4_pd_ms_table_state_t *state, uint8_t dev_id,
 }
 
 p4_pd_act_hdl_t p4_pd_ms_get_mbr_act(p4_pd_ms_table_state_t *state, uint8_t dev_id,
-			       p4_pd_mbr_hdl_t mbr_hdl) {
+				     p4_pd_mbr_hdl_t mbr_hdl) {
   p4_pd_act_hdl_t *PValue;
   JLG(PValue, state->devices_mbr_to_act[dev_id], mbr_hdl);
   return *PValue;
 }
 
 void p4_pd_ms_set_mbr_act(p4_pd_ms_table_state_t *state, uint8_t dev_id,
-		       p4_pd_mbr_hdl_t mbr_hdl, p4_pd_act_hdl_t act_hdl) {
+			  p4_pd_mbr_hdl_t mbr_hdl, p4_pd_act_hdl_t act_hdl) {
   p4_pd_act_hdl_t *PValue;
   JLI(PValue, state->devices_mbr_to_act[dev_id], mbr_hdl);
   *PValue = act_hdl;
 }
 
 p4_pd_act_hdl_t p4_pd_ms_get_grp_act(p4_pd_ms_table_state_t *state, uint8_t dev_id,
-			       p4_pd_grp_hdl_t grp_hdl) {
+				     p4_pd_grp_hdl_t grp_hdl) {
   p4_pd_act_hdl_t *PValue;
   JLG(PValue, state->devices_grp_to_act[dev_id], grp_hdl);
   return *PValue;
 }
 
 void p4_pd_ms_set_grp_act(p4_pd_ms_table_state_t *state, uint8_t dev_id,
-		       p4_pd_grp_hdl_t grp_hdl, p4_pd_act_hdl_t act_hdl) {
+			  p4_pd_grp_hdl_t grp_hdl, p4_pd_act_hdl_t act_hdl) {
   p4_pd_act_hdl_t *PValue;
   JLI(PValue, state->devices_grp_to_act[dev_id], grp_hdl);
   *PValue = act_hdl;
+}
+
+/* not very efficient, I have to loop over all members */
+void p4_pd_ms_del_grp(p4_pd_ms_table_state_t *state, uint8_t dev_id,
+		      p4_pd_grp_hdl_t grp_hdl) {
+  Word_t Index = 0;
+  PWord_t PValue;
+  int Rc_int;
+  Pvoid_t *jarray_grps;
+  JLF(PValue, state->devices_mbr_to_grp_list[dev_id], Index);
+  while(PValue != NULL) {
+    jarray_grps = (Pvoid_t *) PValue;
+    J1U(Rc_int, *jarray_grps, grp_hdl);
+    JLN(PValue, state->devices_mbr_to_grp_list[dev_id], Index);
+  }
 }
