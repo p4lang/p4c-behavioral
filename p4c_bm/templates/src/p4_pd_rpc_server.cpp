@@ -439,6 +439,18 @@ public:
       return ${pd_name}(sess_hdl, pd_dev_tgt);
   }
 
+//:: name = "tables_clean_all"
+//:: pd_name = pd_prefix + name
+  int32_t ${name}(const SessionHandle_t sess_hdl, const DevTarget_t &dev_tgt) {
+      std::cerr << "In ${name}\n";
+
+      p4_pd_dev_target_t pd_dev_tgt;
+      pd_dev_tgt.device_id = dev_tgt.dev_id;
+      pd_dev_tgt.dev_pipe_id = dev_tgt.dev_pipe_id;
+
+      return ${pd_name}(sess_hdl, pd_dev_tgt);
+  }
+
     // INDIRECT ACTION DATA AND MATCH SELECT
 
 //:: _action_profiles = set()

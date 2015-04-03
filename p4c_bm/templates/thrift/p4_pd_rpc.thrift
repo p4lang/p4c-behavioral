@@ -438,8 +438,12 @@ service ${p4_prefix} {
 
 
 
-    # To reset all tables
+    # clean all state
 //:: name = "clean_all"
+    i32 ${name}(1:SessionHandle_t sess_hdl, 2:DevTarget_t dev_tgt);
+
+    # clean table state
+//:: name = "tables_clean_all"
     i32 ${name}(1:SessionHandle_t sess_hdl, 2:DevTarget_t dev_tgt);
 
     # counters

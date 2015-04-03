@@ -1175,7 +1175,7 @@ ${name}
 //:: #endfor
 
 
-/* Reset all tables */
+/* Clean all state */
 //:: name = "p4_pd_" + p4_prefix + "_clean_all"
 p4_pd_status_t
 ${name}
@@ -1185,6 +1185,18 @@ ${name}
 )
 {
   lf_clean_all();
+  return tables_clean_all();
+}
+
+/* Clean all tables */
+//:: name = "p4_pd_" + p4_prefix + "_tables_clean_all"
+p4_pd_status_t
+${name}
+(
+ p4_pd_sess_hdl_t sess_hdl,
+ p4_pd_dev_target_t dev_tgt
+)
+{
   return tables_clean_all();
 }
 
