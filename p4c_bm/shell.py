@@ -42,6 +42,8 @@ def get_parser():
                         help='Generate and include thrift interfaces')
     parser.add_argument('--gen-dir', dest='gen_dir', default = "output",
                         help="destination directory for generated files")
+    parser.add_argument('--templates-dir', dest='templates_dir', default = "templates",
+                        help="templates directory")
     parser.add_argument('--p4-name', type=str, dest='p4_name',
                         help='The name to use for the program')
     parser.add_argument('--p4-prefix', type=str, dest='p4_prefix',
@@ -67,7 +69,9 @@ def main():
     parser = get_parser()
     args = parser.parse_args()
 
+    _TEMPLATES_DIR = os.path.dirname(os.path.realpath(__file__))  
     gen_dir = os.path.abspath(args.gen_dir)
+    templates_dir = os.path.join(_TEMPLATES_DIR, args.templates_dir)
     if os.path.exists(gen_dir):
         if not os.path.isdir(gen_dir):
             sys.stderr.write(args.gen_dir + " exists but is not a directory\n")
@@ -103,7 +107,7 @@ def main():
                                            args.meta_config,
                                            args.public_inc_path,
                                            dump_yaml = args.dump_yaml)
-    smart.render_all_files(render_dict, gen_dir,
+    smart.render_all_files(render_dict, gen_dir, templates_dir,
                            with_thrift = args.thrift)
 
 if __name__ == "__main__":

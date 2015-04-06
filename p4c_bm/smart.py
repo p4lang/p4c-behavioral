@@ -24,10 +24,11 @@ from time import sleep
 import sys
 import json
 from pkg_resources import resource_string
+import pdb
 
 _SMART_DIR = os.path.dirname(os.path.realpath(__file__))
 
-templates_dir = os.path.join(_SMART_DIR, "templates")
+#templates_dir = os.path.join(_SMART_DIR, "templates")
 
 re_brackets = re.compile('[\[\]]')
 
@@ -1165,7 +1166,7 @@ def gen_file_lists(current_dir, gen_dir, public_inc_path):
         for filename in files:
             if ignore_template_file(filename):
                 continue
-            relpath = os.path.relpath(os.path.join(root, filename), templates_dir)
+            relpath = os.path.relpath(os.path.join(root, filename), current_dir)
             template_file = relpath
 
             # Put the include files in public include path.
@@ -1176,7 +1177,7 @@ def gen_file_lists(current_dir, gen_dir, public_inc_path):
             files_out.append((template_file, target_file))
     return files_out
 
-def render_all_files(render_dict, gen_dir, with_thrift = False):
+def render_all_files(render_dict, gen_dir, templates_dir, with_thrift = False):
     files = gen_file_lists(templates_dir, gen_dir, render_dict["public_inc_path"])
     for template, target in files:
         # not very robust

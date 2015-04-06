@@ -1,3 +1,6 @@
+//:: # Template file
+//:: # @FIXME top matter needed
+//:: rocker_p4_prefix = "rocker_" + p4_prefix + "_"
 /*
 Copyright 2013-present Barefoot Networks, Inc. 
 
@@ -13,15 +16,29 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+/**
+ *
+ * DO NOT EDIT:  This file is generated from P4 program.
+ *
+ */
 
-#ifndef _RMT_PKT_MANAGER_H
-#define _RMT_PKT_MANAGER_H
+#ifndef _ROCKER_${p4_prefix}ENUMS_H
+#define _ROCKER_${p4_prefix}ENUMS_H
 
-#include <stdint.h>
+/**
+ * @addtogroup Tables
+ * @{
+ */
 
-int pkt_manager_receive(int ingress, void *pkt, int len);
-
-void pkt_manager_init(void);
-int pkt_manager_transmit(int egress, void *pkt, int len, uint64_t packet_id, int ingress);
+/**
+ * @brief Enumeration of table names
+ */
+typedef enum ${rocker_p4_prefix}_table_e {
+    RMT_TABLE_NONE,
+//:: for table_name, t_info in table_info.items():
+    RMT_TABLE_${table_name},
+//:: #endfor
+    RMT_TABLE_COUNT
+} ${rocker_p4_prefix}_table_t;
 
 #endif

@@ -106,11 +106,12 @@ static void *processing_loop_egress(void *arg) {
       free(b_pkt->pkt_data);
     }
     int egress = fields_get_egress_port(pipeline->phv);
+    int ingress = fields_get_ingress_port(pipeline->phv);
 
     if(pipeline->phv->truncated_length && (pipeline->phv->truncated_length < pkt_len))
       pkt_len = pipeline->phv->truncated_length;
     
-    pkt_manager_transmit(egress, pkt_data, pkt_len, b_pkt->pkt_id);
+    pkt_manager_transmit(egress, pkt_data, pkt_len, b_pkt->pkt_id, ingress);
     free(e_pkt);
   }
 
