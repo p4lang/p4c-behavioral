@@ -110,10 +110,11 @@ int verify_checksums(phv_data_t *phv) {
 //::     _, if_cond_idx = verify
 //::     if if_cond_idx:
   if(check_condition_${if_cond_idx}(phv)) {
-    if(!verify_${field}_${idx}(phv)) return 0;
+    return verify_${field}_${idx}(phv);
   }
 //::     else:
-  if(!verify_${field}_${idx}(phv)) return 0;
+  return verify_${field}_${idx}(phv);
+//::       break
 //::     #endif
 
 //::   #endfor
@@ -128,9 +129,11 @@ void update_checksums(phv_data_t *phv) {
 //::     if if_cond_idx:
   if(check_condition_${if_cond_idx}(phv)) {
     update_${field}_${idx}(phv);
+    return;
   }
 //::     else:
   update_${field}_${idx}(phv);
+//::       break
 //::     #endif
 
 //::   #endfor

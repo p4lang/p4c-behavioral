@@ -203,7 +203,7 @@ public:
 
         p4_pd_dev_target_t pd_dev_tgt;
         pd_dev_tgt.device_id = dev_tgt.dev_id;
-        pd_dev_tgt.dev_port_id = dev_tgt.port_id;
+        pd_dev_tgt.dev_pipe_id = dev_tgt.dev_pipe_id;
 
 //::     if has_match_spec:
         ${pd_prefix}${table}_match_spec_t pd_match_spec;
@@ -329,7 +329,7 @@ public:
 
         p4_pd_dev_target_t pd_dev_tgt;
         pd_dev_tgt.device_id = dev_tgt.dev_id;
-        pd_dev_tgt.dev_port_id = dev_tgt.port_id;
+        pd_dev_tgt.dev_pipe_id = dev_tgt.dev_pipe_id;
 
         int32_t index = -1;
 
@@ -396,7 +396,7 @@ public:
 
         p4_pd_dev_target_t pd_dev_tgt;
         pd_dev_tgt.device_id = dev_tgt.dev_id;
-        pd_dev_tgt.dev_port_id = dev_tgt.port_id;
+        pd_dev_tgt.dev_pipe_id = dev_tgt.dev_pipe_id;
 
 //::     if has_action_spec:
         ${pd_prefix}${action}_action_spec_t pd_action_spec;
@@ -434,7 +434,19 @@ public:
 
       p4_pd_dev_target_t pd_dev_tgt;
       pd_dev_tgt.device_id = dev_tgt.dev_id;
-      pd_dev_tgt.dev_port_id = dev_tgt.port_id;
+      pd_dev_tgt.dev_pipe_id = dev_tgt.dev_pipe_id;
+
+      return ${pd_name}(sess_hdl, pd_dev_tgt);
+  }
+
+//:: name = "tables_clean_all"
+//:: pd_name = pd_prefix + name
+  int32_t ${name}(const SessionHandle_t sess_hdl, const DevTarget_t &dev_tgt) {
+      std::cerr << "In ${name}\n";
+
+      p4_pd_dev_target_t pd_dev_tgt;
+      pd_dev_tgt.device_id = dev_tgt.dev_id;
+      pd_dev_tgt.dev_pipe_id = dev_tgt.dev_pipe_id;
 
       return ${pd_name}(sess_hdl, pd_dev_tgt);
   }
@@ -464,7 +476,7 @@ public:
 
         p4_pd_dev_target_t pd_dev_tgt;
         pd_dev_tgt.device_id = dev_tgt.dev_id;
-        pd_dev_tgt.dev_port_id = dev_tgt.port_id;
+        pd_dev_tgt.dev_pipe_id = dev_tgt.dev_pipe_id;
 
 //::     if has_action_spec:
         ${pd_prefix}${action}_action_spec_t pd_action_spec;
@@ -551,7 +563,7 @@ public:
 
         p4_pd_dev_target_t pd_dev_tgt;
         pd_dev_tgt.device_id = dev_tgt.dev_id;
-        pd_dev_tgt.dev_port_id = dev_tgt.port_id;
+        pd_dev_tgt.dev_pipe_id = dev_tgt.dev_pipe_id;
 
 	p4_pd_grp_hdl_t pd_grp_hdl;
 
@@ -648,7 +660,7 @@ public:
 
         p4_pd_dev_target_t pd_dev_tgt;
         pd_dev_tgt.device_id = dev_tgt.dev_id;
-        pd_dev_tgt.dev_port_id = dev_tgt.port_id;
+        pd_dev_tgt.dev_pipe_id = dev_tgt.dev_pipe_id;
 
 //::   if has_match_spec:
         ${pd_prefix}${table}_match_spec_t pd_match_spec;
@@ -687,7 +699,7 @@ public:
 
         p4_pd_dev_target_t pd_dev_tgt;
         pd_dev_tgt.device_id = dev_tgt.dev_id;
-        pd_dev_tgt.dev_port_id = dev_tgt.port_id;
+        pd_dev_tgt.dev_pipe_id = dev_tgt.dev_pipe_id;
 
 //::   if has_match_spec:
         ${pd_prefix}${table}_match_spec_t pd_match_spec;
@@ -733,7 +745,7 @@ public:
 
         p4_pd_dev_target_t pd_dev_tgt;
         pd_dev_tgt.device_id = dev_tgt.dev_id;
-        pd_dev_tgt.dev_port_id = dev_tgt.port_id;
+        pd_dev_tgt.dev_pipe_id = dev_tgt.dev_pipe_id;
 
         p4_pd_entry_hdl_t pd_entry;
 
@@ -755,7 +767,7 @@ public:
 
         p4_pd_dev_target_t pd_dev_tgt;
         pd_dev_tgt.device_id = dev_tgt.dev_id;
-        pd_dev_tgt.dev_port_id = dev_tgt.port_id;
+        pd_dev_tgt.dev_pipe_id = dev_tgt.dev_pipe_id;
 
         p4_pd_entry_hdl_t pd_entry;
 
@@ -782,7 +794,7 @@ public:
 
       p4_pd_dev_target_t pd_dev_tgt;
       pd_dev_tgt.device_id = dev_tgt.dev_id;
-      pd_dev_tgt.dev_port_id = dev_tgt.port_id;
+      pd_dev_tgt.dev_pipe_id = dev_tgt.dev_pipe_id;
 
       return ${pd_name}(sess_hdl, pd_dev_tgt, entry);
   }
@@ -795,7 +807,7 @@ public:
 
       p4_pd_dev_target_t pd_dev_tgt;
       pd_dev_tgt.device_id = dev_tgt.dev_id;
-      pd_dev_tgt.dev_port_id = dev_tgt.port_id;
+      pd_dev_tgt.dev_pipe_id = dev_tgt.dev_pipe_id;
 
       return ${pd_name}(sess_hdl, pd_dev_tgt, entry);
   }
@@ -808,7 +820,7 @@ public:
 
       p4_pd_dev_target_t pd_dev_tgt;
       pd_dev_tgt.device_id = dev_tgt.dev_id;
-      pd_dev_tgt.dev_port_id = dev_tgt.port_id;
+      pd_dev_tgt.dev_pipe_id = dev_tgt.dev_pipe_id;
 
       return ${pd_name}(sess_hdl, pd_dev_tgt, index);
   }
@@ -831,7 +843,7 @@ public:
 
       p4_pd_dev_target_t pd_dev_tgt;
       pd_dev_tgt.device_id = dev_tgt.dev_id;
-      pd_dev_tgt.dev_port_id = dev_tgt.port_id;
+      pd_dev_tgt.dev_pipe_id = dev_tgt.dev_pipe_id;
 
       return ${pd_name}(sess_hdl, pd_dev_tgt);
   }
@@ -845,7 +857,7 @@ public:
 
       p4_pd_dev_target_t pd_dev_tgt;
       pd_dev_tgt.device_id = dev_tgt.dev_id;
-      pd_dev_tgt.dev_port_id = dev_tgt.port_id;
+      pd_dev_tgt.dev_pipe_id = dev_tgt.dev_pipe_id;
 
       return ${pd_name}(sess_hdl, pd_dev_tgt);
   }
@@ -894,7 +906,7 @@ public:
 
       p4_pd_dev_target_t pd_dev_tgt;
       pd_dev_tgt.device_id = dev_tgt.dev_id;
-      pd_dev_tgt.dev_port_id = dev_tgt.port_id;
+      pd_dev_tgt.dev_pipe_id = dev_tgt.dev_pipe_id;
 
       return ${pd_name}(${pd_param_str});
   }
@@ -908,7 +920,7 @@ public:
 
       p4_pd_dev_target_t pd_dev_tgt;
       pd_dev_tgt.device_id = dev_tgt.dev_id;
-      pd_dev_tgt.dev_port_id = dev_tgt.port_id;
+      pd_dev_tgt.dev_pipe_id = dev_tgt.dev_pipe_id;
 
       return ${pd_name}(${pd_param_str});
   }
@@ -1020,7 +1032,7 @@ public:
     ${rpc_msg_type} rpc_msg;
     rpc_msg.msg_ptr = (int64_t)msg;
     rpc_msg.dev_tgt.dev_id = msg->dev_tgt.device_id;
-    rpc_msg.dev_tgt.port_id = msg->dev_tgt.dev_port_id;
+    rpc_msg.dev_tgt.dev_pipe_id = msg->dev_tgt.dev_pipe_id;
     for (int i = 0; (msg != NULL) && (i < msg->num_entries); ++i) {
       ${rpc_entry_type} entry;
 //::   for field in lq["fields"].keys():

@@ -41,7 +41,7 @@ enum P4LogLevel_t {
 typedef i32 SessionHandle_t
 struct DevTarget_t {
   1: required byte dev_id;
-  2: required i16 port_id;
+  2: required i16 dev_pipe_id;
 }
 
 //:: def get_type(byte_width):
@@ -438,8 +438,12 @@ service ${p4_prefix} {
 
 
 
-    # To reset all tables
+    # clean all state
 //:: name = "clean_all"
+    i32 ${name}(1:SessionHandle_t sess_hdl, 2:DevTarget_t dev_tgt);
+
+    # clean table state
+//:: name = "tables_clean_all"
     i32 ${name}(1:SessionHandle_t sess_hdl, 2:DevTarget_t dev_tgt);
 
     # counters

@@ -66,4 +66,7 @@ p4_pd_act_hdl_t p4_pd_ms_get_grp_act(p4_pd_ms_table_state_t *state, uint8_t dev_
 void p4_pd_ms_set_grp_act(p4_pd_ms_table_state_t *state, uint8_t dev_id,
 			  p4_pd_grp_hdl_t grp_hdl, p4_pd_act_hdl_t act_hdl);
 
+void p4_pd_ms_del_grp(p4_pd_ms_table_state_t *state, uint8_t dev_id,
+		      p4_pd_grp_hdl_t grp_hdl);
+
 #endif

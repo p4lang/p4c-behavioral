@@ -68,15 +68,6 @@ p4_pd_status_t mc_l2_node_destroy(p4_pd_sess_hdl_t session,
 p4_pd_status_t mc_l2_node_update(p4_pd_sess_hdl_t session,
                               mc_l2_node_hdl_t l2_hdl,
                               const uint8_t *port_map);
-
-p4_pd_status_t mc_l2_lag_update(p4_pd_sess_hdl_t session,
-                             mgrp_lag_id_t lag_id,
-                             const uint8_t *port_map);
-
-p4_pd_status_t mc_update_prune_table(p4_pd_sess_hdl_t session,
-                                     int8_t dev_id,
-                                     mgrp_yid_t yid, uint8_t port_id,
-                                     bool prune);
  
 //:: #endif
 #endif /* _RMT_PRE_H */

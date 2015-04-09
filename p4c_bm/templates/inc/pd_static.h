@@ -30,11 +30,11 @@ typedef uint32_t p4_pd_grp_hdl_t;
 /* TODO: change that, it is horrible */
 typedef void* p4_pd_value_hdl_t;
 
-#define PD_DEV_PORT_ALL 0xffff
+#define PD_DEV_PIPE_ALL 0xffff
 typedef struct p4_pd_dev_target {
   uint8_t device_id; /*!< Device Identifier the API request is for */
-  uint16_t dev_port_id;/*!< If specified localizes target to the resources
-			 * only accessible to the port. DEV_PORT_ALL serves
+  uint16_t dev_pipe_id;/*!< If specified localizes target to the resources
+			 * only accessible to the port. DEV_PIPE_ALL serves
 			 * as a wild-card value
 			 */
 } p4_pd_dev_target_t;
@@ -65,5 +65,8 @@ p4_pd_commit_txn(p4_pd_sess_hdl_t shdl, bool hwSynchronous, bool *sendRsp);
 
 p4_pd_status_t
 p4_pd_complete_operations(p4_pd_sess_hdl_t shdl);
+
+uint16_t
+p4_pd_dev_port_to_pipe_id(uint16_t dev_port_id);
 
 #endif

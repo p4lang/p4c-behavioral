@@ -67,7 +67,21 @@ def _validate_dir(dir_name):
 
 def main():
     parser = get_parser()
-    args = parser.parse_args()
+    input_args = sys.argv[1:]
+    args, unparsed_args = parser.parse_known_args()
+
+    has_remaining_args = False
+    preprocessor_args = []
+    for a in unparsed_args:
+        if a[:2] == "-D":
+            input_args.remove(a)
+            preprocessor_args.append(a)
+        else:
+            has_remaining_args = True
+
+    # trigger error
+    if has_remaining_args:
+        parser.parse_args(input_args)
 
     _TEMPLATES_DIR = os.path.dirname(os.path.realpath(__file__))  
     gen_dir = os.path.abspath(args.gen_dir)
@@ -96,6 +110,8 @@ def main():
 
     h = HLIR(args.source)
     h.add_preprocessor_args("-D__TARGET_BM__")
+    for parg in preprocessor_args:
+        h.add_preprocessor_args(parg)
     if not h.build():
         print "Error while building HLIR"
         sys.exit(1)
