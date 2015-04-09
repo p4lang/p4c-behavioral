@@ -19,8 +19,8 @@ limitations under the License.
  *
  */
 
-#ifndef _ROCKER_${p4_prefix}_H_
-#define _ROCKER_${p4_prefix}_H_
+#ifndef _ROCKER_${p4_prefix}_TABLES_H_
+#define _ROCKER_${p4_prefix}_TABLES_H_
 
 #define TABLES_DEFAULT_INIT_SIZE 65536 // entries
 
