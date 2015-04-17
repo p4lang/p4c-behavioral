@@ -51,6 +51,7 @@ typedef struct rmt_instance_s {
   p4_logging_f logger;
   p4_log_level_t log_level;
   rmt_transmit_vector_f tx_fn;
+  void                  *tx_fn_cookie;
 } rmt_instance_t;
 
 extern rmt_instance_t *rmt_instance;

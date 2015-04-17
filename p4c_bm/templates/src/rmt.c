@@ -63,6 +63,7 @@ p4_log_level_t rmt_log_level_get() {
   return rmt_instance->log_level;
 }
 
-void rmt_transmit_register(rmt_transmit_vector_f tx_fn) {
+void rmt_transmit_register(rmt_transmit_vector_f tx_fn, void *cookie) {
   rmt_instance->tx_fn = tx_fn;
+  rmt_instance->tx_fn_cookie = cookie;
 }

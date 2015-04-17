@@ -57,7 +57,7 @@ static void *pkt_out_loop(void *arg) {
       RMT_LOG(P4_LOG_LEVEL_VERBOSE,
 	      "outgoing thread: sending pkt out of port %d\n",
 	      t_pkt->egress);
-      rmt_instance->tx_fn(t_pkt->egress, b_pkt->pkt_data, b_pkt->pkt_len, t_pkt->ingress);
+      rmt_instance->tx_fn(t_pkt->egress, b_pkt->pkt_data, b_pkt->pkt_len, t_pkt->ingress, rmt_instance->tx_fn_cookie);
     }
     free(b_pkt->pkt_data);
     free(t_pkt);

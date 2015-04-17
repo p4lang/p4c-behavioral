@@ -54,7 +54,7 @@ extern int rmt_process_pkt(p4_port_t ingress, void *pkt, int len);
  * @brief Function pointer for packet transmit vector
  */
 
-typedef void (*rmt_transmit_vector_f)(p4_port_t egress, void *pkt, int len, int ingress);
+typedef void (*rmt_transmit_vector_f)(p4_port_t egress, void *pkt, int len, int ingress, void *cookie);
 
 /**
  * @brief Register the transmit function with the forwarding simulation
@@ -62,7 +62,7 @@ typedef void (*rmt_transmit_vector_f)(p4_port_t egress, void *pkt, int len, int 
  * @param tx_fn The transmit function to use (or NULL to deregister)
  */
 
-extern void rmt_transmit_register(rmt_transmit_vector_f tx_fn);
+extern void rmt_transmit_register(rmt_transmit_vector_f tx_fn, void *cookie);
 
 /**
  * @brief Typedef of logging vector
