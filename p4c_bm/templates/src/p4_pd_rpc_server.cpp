@@ -6,6 +6,7 @@
 
 #include "${p4_prefix}.h"
 #include <stdlib.h>
+#include <iostream>
 #include "p4_sim/p4_pd_rpc_server.h"
 #include <thrift/protocol/TBinaryProtocol.h>
 #include <thrift/server/TSimpleServer.h>
