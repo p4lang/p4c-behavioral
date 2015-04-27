@@ -660,7 +660,7 @@ int tables_modify_entry_${table}(int entry_index,
 //:: for table, t_info in table_info.items():
 //::   action_data_width = t_info["action_data_byte_width"]
 int tables_set_default_${table}(int action_id, uint8_t *action_data) {
-  RMT_LOG(P4_LOG_LEVEL_VERBOSE, "${table}: setting default action\n");
+  RMT_LOG(P4_LOG_LEVEL_VERBOSE, "${table}: setting default action %d\n", action_id);
   table_t *table = &tables_array[RMT_TABLE_${table}];
 
   pthread_rwlock_wrlock(&table->lock);

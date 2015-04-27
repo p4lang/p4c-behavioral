@@ -54,7 +54,7 @@ extern int rmt_process_pkt(p4_port_t ingress, void *pkt, int len);
  * @brief Function pointer for packet transmit vector
  */
 
-typedef void (*rmt_transmit_vector_f)(p4_port_t egress, void *pkt, int len, int ingress, void *cookie);
+typedef void (*rmt_transmit_vector_f)(p4_port_t egress, void *pkt, int len, p4_port_t ingress, void *cookie);
 
 /**
  * @brief Register the transmit function with the forwarding simulation
@@ -113,7 +113,7 @@ extern p4_log_level_t rmt_log_level_get(void);
 typedef void (table_add_fn)(void *entry);
 typedef void (table_mod_fn)(void *entry);
 typedef void (table_del_fn)(void *entry);
-typedef void (table_default_action_fn)(int action_id, unsigned char *action_data);
+typedef void (table_default_action_fn)(void *entry);
 typedef void (table_print_fn)(void);
 
 typedef struct p4_rmt_table_ops_s {

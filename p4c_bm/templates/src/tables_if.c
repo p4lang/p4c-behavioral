@@ -34,9 +34,13 @@ void ${p4_prefix}_tables_add_entry_${table}(void *entry) {
   (void)tables_add_entry_${table}(&new_entry);
 }
 
-void ${p4_prefix}_tables_set_default_${table}(int action_id, unsigned char *data) {
-  // just call the table function directly
-  tables_set_default_${table}(action_id, data);
+void ${p4_prefix}_tables_set_default_${table}(void *entry) {
+  ${table}_entry_t new_entry;
+  /* Make sure that the P4 specified fields are at the beginning
+   * of both entries
+   */
+  memcpy(&new_entry, entry, sizeof(${rocker_p4_prefix}${table}_entry_t));
+  tables_set_default_${table}(new_entry.action_id, new_entry.action_data);
 }
 
 void ${p4_prefix}_tables_print_entries_${table}() {

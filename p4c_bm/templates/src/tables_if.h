@@ -53,7 +53,7 @@ typedef struct ${rocker_p4_prefix}${table_name}_entry_s {
 
 
 extern void ${p4_prefix}_tables_add_entry_${table_name}(void *entry);
-extern void ${p4_prefix}_tables_set_default_${table_name}(int action_id, unsigned char *action_data);
+extern void ${p4_prefix}_tables_set_default_${table_name}(void *entry);
 extern void ${p4_prefix}_tables_print_entries_${table_name}(void);
 
 //:: #endfor
