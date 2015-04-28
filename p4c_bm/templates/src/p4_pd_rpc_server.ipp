@@ -1,35 +1,26 @@
-//:: # Generate the handler routines for the interfaces
-
 //:: pd_prefix = "p4_pd_" + p4_prefix + "_"
 //:: pd_static_prefix = "p4_pd_"
 //:: api_prefix = p4_prefix + "_"
 
 #include "${p4_prefix}.h"
-#include <stdlib.h>
+
 #include <iostream>
-#include "p4_sim/p4_pd_rpc_server.h"
-#include <thrift/protocol/TBinaryProtocol.h>
-#include <thrift/server/TSimpleServer.h>
-#include <thrift/transport/TServerSocket.h>
-#include <thrift/transport/TBufferTransports.h>
+
+#include <string.h>
 
 extern "C" {
 #include <p4_sim/pd_static.h>
 #include <p4_sim/pd.h>
 #include <p4_sim/mirroring.h>
-#include <p4_sim/rmt.h>
-#include <p4_sim/pre.h>
 #include <p4utils/circular_buffer.h>
 }
 
-using namespace ::apache::thrift;
-using namespace ::apache::thrift::protocol;
-using namespace ::apache::thrift::transport;
-using namespace ::apache::thrift::server;
-
-using boost::shared_ptr;
+#include <list>
+#include <map>
+#include <pthread.h>
 
 using namespace  ::p4_pd_rpc;
+using namespace  ::res_pd_rpc;
 
 class ${p4_prefix}Handler : virtual public ${p4_prefix}If {
 public:
@@ -38,87 +29,6 @@ public:
 //:: for lq in learn_quanta:
         pthread_mutex_init(&${lq["name"]}_mutex, NULL);
 //:: #endfor
-    }
-
-    void echo(const std::string& s) {
-        // Your implementation goes here
-        std::cerr << "Echo: " << s << std::endl;
-    }
- 
-    // static functions
-
-//:: name = "init"
-//:: pd_name = pd_static_prefix + name
-    void ${name}(){
-        std::cerr << "In ${name}\n";
-	${pd_name}();
-    }
-
-//:: name = "cleanup"
-//:: pd_name = pd_static_prefix + name
-    void ${name}(){
-        std::cerr << "In ${name}\n";
-	${pd_name}();
-    }
-
-//:: name = "client_init"
-//:: pd_name = pd_static_prefix + name
-    SessionHandle_t ${name}(const int32_t max_txn_size){
-        std::cerr << "In ${name}\n";
-
-	p4_pd_sess_hdl_t sess_hdl;
-	${pd_name}(&sess_hdl, max_txn_size);
-	return sess_hdl;
-    }
-
-//:: name = "client_cleanup"
-//:: pd_name = pd_static_prefix + name
-    int32_t ${name}(const SessionHandle_t sess_hdl){
-        std::cerr << "In ${name}\n";
-
-	return ${pd_name}(sess_hdl);
-    }
-
-//:: name = "begin_txn"
-//:: pd_name = pd_static_prefix + name
-    int32_t ${name}(const SessionHandle_t sess_hdl, const bool isAtomic, const bool isHighPri){
-        std::cerr << "In ${name}\n";
-
-	return ${pd_name}(sess_hdl, isAtomic, isHighPri);
-    }
-
-//:: name = "verify_txn"
-//:: pd_name = pd_static_prefix + name
-    int32_t ${name}(const SessionHandle_t sess_hdl){
-        std::cerr << "In ${name}\n";
-
-	return ${pd_name}(sess_hdl);
-    }
-
-//:: name = "abort_txn"
-//:: pd_name = pd_static_prefix + name
-    int32_t ${name}(const SessionHandle_t sess_hdl){
-        std::cerr << "In ${name}\n";
-
-	return ${pd_name}(sess_hdl);
-    }
-
-//:: name = "commit_txn"
-//:: pd_name = pd_static_prefix + name
-    int32_t ${name}(const SessionHandle_t sess_hdl, const bool hwSynchronous){
-        std::cerr << "In ${name}\n";
-
-	bool sendRsp;
-	// TODO: sendRsp discarded ...
-	return ${pd_name}(sess_hdl, hwSynchronous, &sendRsp);
-    }
-
-//:: name = "complete_operations"
-//:: pd_name = pd_static_prefix + name
-    int32_t ${name}(const SessionHandle_t sess_hdl){
-        std::cerr << "In ${name}\n";
-
-	return 0;
     }
 
 //:: def get_type(byte_width):
@@ -948,62 +858,6 @@ public:
       return ${name}(mirror_id);
   }
 
-  // control logging
-
-//:: name = "rmt_log_level_set"
-  void ${name}(P4LogLevel_t::type log_level) {
-      std::cerr << "In ${name}\n";
-      ::${name}((p4_log_level_t) log_level);
-  }
-
-//:: name = "rmt_log_level_get"
-  P4LogLevel_t::type ${name}() {
-      std::cerr << "In ${name}\n";
-      return (P4LogLevel_t::type) ::${name}();
-  }
-
-//:: if enable_pre:
-  // Multicast RPC API's
-  EntryHandle_t mc_mgrp_create(const SessionHandle_t sess_hdl, const DevTarget_t& dev_tgt, const int32_t mgid) {
-
-        p4_pd_entry_hdl_t pd_entry;
-        ::mc_mgrp_create(sess_hdl, dev_tgt.dev_id, mgid, &pd_entry);
-        return pd_entry;
-  }
-
-  int16_t mc_mgrp_destroy(const SessionHandle_t sess_hdl, const DevTarget_t& dev_tgt, const int32_t mgid) {
-      return (::mc_mgrp_destroy(sess_hdl, mgid));
-  }
-
-  EntryHandle_t mc_l1_node_create(const SessionHandle_t sess_hdl, const DevTarget_t& dev_tgt, const int16_t rid) {
-      p4_pd_entry_hdl_t pd_entry;
-      ::mc_l1_node_create(sess_hdl, rid, &pd_entry);
-      return pd_entry;
-  }
-
-  int16_t mc_l1_node_destroy(const SessionHandle_t sess_hdl, const DevTarget_t& dev_tgt, const int32_t l1_hdl) {
-      return (::mc_l1_node_destroy(sess_hdl, l1_hdl));
-  }
-
-  int16_t mc_l1_associate_node(const SessionHandle_t sess_hdl, const DevTarget_t& dev_tgt, const int32_t mgrp_hdl, const int32_t l1_hdl)  {
-      return (::mc_l1_associate_node(sess_hdl, mgrp_hdl, l1_hdl));
-  }
-
-  EntryHandle_t mc_l2_node_create(const SessionHandle_t sess_hdl, const DevTarget_t& dev_tgt, const int32_t l1_hdl, const std::vector<int8_t> & port_map) {
-      p4_pd_entry_hdl_t pd_entry;
-      ::mc_l2_node_create(sess_hdl, l1_hdl, (uint8_t *)&port_map[0], &pd_entry);
-      return pd_entry;
-  }
-
-  int16_t mc_l2_node_destroy(const SessionHandle_t sess_hdl, const DevTarget_t& dev_tgt, const int32_t l2_hdl) {
-      return ::mc_l2_node_destroy(sess_hdl, l2_hdl);
-  }
-
-  int16_t mc_l2_node_update(const SessionHandle_t sess_hdl, const DevTarget_t& dev_tgt, const int32_t l2_hdl, const std::vector<int8_t> & port_map) {
-      return (::mc_l2_node_update(sess_hdl, l2_hdl, (uint8_t *)&port_map[0]));
-  }
-//:: #endif
-
   void set_learning_timeout(const SessionHandle_t sess_hdl, const int8_t dev_id, const int32_t msecs) {
       ${pd_prefix}set_learning_timeout(sess_hdl, (const uint8_t)dev_id, msecs);
   }
@@ -1085,37 +939,3 @@ public:
   }
 //:: #endfor
 };
-
-/*
- * Thread wrapper for starting the server
- */
-
-static void *rpc_server_thread(void *arg) {
-    int port = *(int *) arg;
-
-    shared_ptr<${p4_prefix}Handler> handler(new ${p4_prefix}Handler());
-    shared_ptr<TProcessor> processor(new ${p4_prefix}Processor(handler));
-    shared_ptr<TServerTransport> serverTransport(new TServerSocket(port));
-    shared_ptr<TTransportFactory> transportFactory(new TBufferedTransportFactory());
-    shared_ptr<TProtocolFactory> protocolFactory(new TBinaryProtocolFactory());
-
-    TSimpleServer server(processor, serverTransport, transportFactory, protocolFactory);
-
-    server.serve();
-
-    return NULL;
-}
-
-
-static pthread_t rpc_thread;
-
-int start_p4_pd_rpc_server(int port)
-{
-    std::cerr << "\nP4 Program:  ${p4_name}\n\n";
-    std::cerr << "Starting RPC server on port " << port << std::endl;
-
-    int *port_arg = (int *) malloc(sizeof(int));
-    *port_arg = port;
-
-    return pthread_create(&rpc_thread, NULL, rpc_server_thread, port_arg);
-}
