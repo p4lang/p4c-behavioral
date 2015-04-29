@@ -51,6 +51,10 @@ def get_parser():
     parser.add_argument('--meta-config', dest='meta_config',
                         default = "",
                         help="Path to json file specifying metadata config")
+#    parser.add_argument('--plugin', dest='plugins',
+    parser.add_argument('--plugin', dest='plugins', type=lambda s: [str(n) for n in s.split()],
+                        default = "",
+                        help="list of plugins to generate templates")
 
     return parser
 
@@ -120,7 +124,8 @@ def main():
                                            args.public_inc_path,
                                            dump_yaml = args.dump_yaml)
     smart.render_all_files(render_dict, gen_dir,
-                           with_thrift = args.thrift)
+                           with_thrift = args.thrift,
+                           with_plugins = args.plugins)
 
 if __name__ == "__main__":
     main()
