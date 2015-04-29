@@ -1179,7 +1179,7 @@ def gen_file_lists(current_dir, gen_dir, public_inc_path):
             files_out.append((template_file, target_file))
     return files_out
 
-def render_all_files(render_dict, gen_dir, with_thrift = False, with_plugins=[]):
+def render_all_files(render_dict, gen_dir, with_thrift = False, with_plugin_list=[]):
     files = gen_file_lists(templates_dir, gen_dir, render_dict["public_inc_path"])
     for template, target in files:
         # not very robust
@@ -1191,8 +1191,8 @@ def render_all_files(render_dict, gen_dir, with_thrift = False, with_plugins=[])
         with open(target, "w") as f:
             render_template(f, template, render_dict, templates_dir,
                             prefix = gl.tenjin_prefix)
-    if len(with_plugins) > 0:
-        for s in with_plugins:
+    if len(with_plugin_list) > 0:
+        for s in with_plugin_list:
             plugin_dir =  plugin_base + s
             plugin_files = gen_file_lists(plugin_dir, gen_dir+'/plugin/'+s, render_dict["public_inc_path"])
             for template, target in plugin_files:
