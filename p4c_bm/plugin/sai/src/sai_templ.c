@@ -308,7 +308,7 @@ p4_pd_status_t  p4_sai_attribute_to_${table}_action_spec_${action}(p4_table_opco
                         data->size = sizeof(sai_${table}_entry_t);
                         data->entry_handle = entry_hdl;
                         _add_entry_index(0, match_spec, sizeof(sai_${table}_entry_t), data);
-                        printf("Add hdl 0x%0x\n", data->entry_handle);
+//                        SAI_LOG("Add hdl 0x%0x\n", data->entry_handle);
                     }
                 }
 //::            #endif
@@ -318,7 +318,7 @@ p4_pd_status_t  p4_sai_attribute_to_${table}_action_spec_${action}(p4_table_opco
             {
 //::            if has_match_spec:
                 entry_hdl = _get_entry_index(0, match_spec, sizeof(sai_${table}_entry_t));
-//                printf(" mod hdl 0x%0x\n", entry_hdl);
+//                SAI_LOG(" mod hdl 0x%0x\n", entry_hdl);
 //::            else:
                 entry_hdl = 0; // always 0 as there is only one record in table
 //::            #endif
@@ -336,7 +336,7 @@ p4_pd_status_t  p4_sai_attribute_to_${table}_action_spec_${action}(p4_table_opco
             {
 //::            if has_match_spec:
                 entry_hdl = _get_entry_index(0, match_spec, sizeof(sai_${table}_entry_t));
-                printf(" del hdl 0x%0x\n", entry_hdl);
+//                SAI_LOG(" del hdl 0x%0x\n", entry_hdl);
 //::            else:
                 entry_hdl = 0; // always 0 as there is only one record in table
 //::            #endif
@@ -365,7 +365,7 @@ p4_pd_status_t  p4_sai_attribute_to_${table}_action_spec(p4_table_opcode_t op_co
                     _In_ const sai_attribute_t *attr_list)
 {
     sai_status_t  status=0; 
-    SAI_LOG("%s: %d\n", __FILE__, __LINE__);
+//    SAI_LOG("%s: %d\n", __FILE__, __LINE__);
     {
         /*
         *   Call appropriate action functions to set the entry
@@ -424,7 +424,7 @@ sai_status_t sai_remove_${table}(
         p4_pd_entry_hdl_t entry_hdl;
 //::            if has_match_spec:
                 entry_hdl = _get_entry_index(0, &match_spec, sizeof(sai_${table}_entry_t));
-                printf(" del hdl 0x%0x\n", entry_hdl);
+//                SAI_LOG(" del hdl 0x%0x\n", entry_hdl);
 //::            else:
                 entry_hdl = 0; // always 0 as there is only one record in table
 //::            #endif
