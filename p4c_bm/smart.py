@@ -28,6 +28,7 @@ from pkg_resources import resource_string
 _SMART_DIR = os.path.dirname(os.path.realpath(__file__))
 
 templates_dir = os.path.join(_SMART_DIR, "templates")
+plugin_base = os.path.join(_SMART_DIR, 'plugin/')
 
 re_brackets = re.compile('[\[\]]')
 
@@ -1167,7 +1168,7 @@ def gen_file_lists(current_dir, gen_dir, public_inc_path):
         for filename in files:
             if ignore_template_file(filename):
                 continue
-            relpath = os.path.relpath(os.path.join(root, filename), templates_dir)
+            relpath = os.path.relpath(os.path.join(root, filename), current_dir)
             template_file = relpath
 
             # Put the include files in public include path.
@@ -1178,7 +1179,7 @@ def gen_file_lists(current_dir, gen_dir, public_inc_path):
             files_out.append((template_file, target_file))
     return files_out
 
-def render_all_files(render_dict, gen_dir, with_thrift = False):
+def render_all_files(render_dict, gen_dir, with_thrift = False, with_plugins=[]):
     files = gen_file_lists(templates_dir, gen_dir, render_dict["public_inc_path"])
     for template, target in files:
         # not very robust
@@ -1190,4 +1191,16 @@ def render_all_files(render_dict, gen_dir, with_thrift = False):
         with open(target, "w") as f:
             render_template(f, template, render_dict, templates_dir,
                             prefix = gl.tenjin_prefix)
+    if len(with_plugins) > 0:
+        for s in with_plugins:
+            plugin_dir =  plugin_base + s
+            plugin_files = gen_file_lists(plugin_dir, gen_dir+'/plugin/'+s, render_dict["public_inc_path"])
+            for template, target in plugin_files:
+                path = os.path.dirname(target)
+                if not os.path.exists(path):
+                    os.makedirs(path)
+                with open(target, "w") as f:
+                    render_template(f, template, render_dict, plugin_dir,
+                            prefix = gl.tenjin_prefix)
+
 
