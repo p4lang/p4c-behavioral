@@ -229,7 +229,11 @@ void p4_sai_entry_to_${table}_match_spec(
 //::     #endif
 //::     params += ["&entry_hdl"]
 //::     param_str = ",\n     ".join(params)
-//::     del_name = p4_pd_prefix + table + "_table_delete"
+//::     if act_prof_name is not None:
+//::        del_name = p4_pd_prefix + parent_table + "_table_delete"
+//::     else:
+//::        del_name = p4_pd_prefix + table + "_table_delete"
+//::     #endif
 //::     mod_params = ["sess_hdl", "dev_id"]
 //::     del_params = ["sess_hdl", 
 //::               "dev_id"] 
