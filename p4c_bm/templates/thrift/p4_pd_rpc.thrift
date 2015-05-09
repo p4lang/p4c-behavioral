@@ -105,11 +105,7 @@ struct ${rpc_entry_type} {
 //::   for field in fields:
 //::     bit_width = field_info[field]["bit_width"]
 //::     byte_width = (bit_width + 7 ) / 8
-//::     if byte_width > 4:
-//::       field_definition = "list<byte> %s" % field
-//::     else:
-//::       field_definition = "%s %s" % (get_thrift_type(byte_width), field)
-//::     #endif
+//::     field_definition = "%s %s" % (get_thrift_type(byte_width), field)
   ${count}: required ${field_definition};
 //::   count += 1
 //::   #endfor
