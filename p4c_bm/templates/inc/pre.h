@@ -22,13 +22,13 @@ limitations under the License.
 #include <p4_sim/pd.h>
 
 #define PRE_MGID_MAX 16384
-#define PRE_PORTS_MAX 288
+#define PRE_PORTS_MAX 256
 #define PRE_L1_NODE_MAX 16384
 #define PRE_L2_NODE_MAX 4096
+#define PRE_LAG_MAX 256
 
 typedef uint16_t mgrp_id_t;
 typedef uint16_t mgrp_rid_t;
-typedef uint16_t mgrp_yid_t;
 typedef uint16_t mgrp_lag_id_t;
 typedef uint16_t mgrp_port_id_t;
 
@@ -60,6 +60,7 @@ p4_pd_status_t mc_l1_node_destroy(p4_pd_sess_hdl_t session,
 p4_pd_status_t mc_l2_node_create(p4_pd_sess_hdl_t session,
                                    mc_l1_node_hdl_t l1_hdl,
                                    const uint8_t *port_map,
+                                   const uint8_t *lag_map,
                                    mc_l2_node_hdl_t *l2_hdl);
 
 p4_pd_status_t mc_l2_node_destroy(p4_pd_sess_hdl_t session,
@@ -67,7 +68,13 @@ p4_pd_status_t mc_l2_node_destroy(p4_pd_sess_hdl_t session,
 
 p4_pd_status_t mc_l2_node_update(p4_pd_sess_hdl_t session,
                               mc_l2_node_hdl_t l2_hdl,
-                              const uint8_t *port_map);
+                              const uint8_t *port_map,
+                              const uint8_t *lag_map);
+
+p4_pd_status_t mc_l2_lag_update(p4_pd_sess_hdl_t session,
+                             int8_t dev_id,
+                             mgrp_lag_id_t lag_id,
+                             const uint8_t *port_map);
  
 //:: #endif
 #endif /* _RMT_PRE_H */

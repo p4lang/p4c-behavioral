@@ -14,8 +14,9 @@ service mc {
     McHandle_t mc_l1_node_create(1: res.SessionHandle_t sess_hdl, 2: res.DevTarget_t dev_tgt, 3: i16 rid);
     i16 mc_l1_node_destroy(1: res.SessionHandle_t sess_hdl, 2: res.DevTarget_t dev_tgt, 3: i32 l1_hdl);
     i16 mc_l1_associate_node(1: res.SessionHandle_t sess_hdl, 2: res.DevTarget_t dev_tgt, 3: i32 mgrp_hdl, 4: i32 l1_hdl);
-    McHandle_t mc_l2_node_create(1: res.SessionHandle_t sess_hdl, 2: res.DevTarget_t dev_tgt, 3: i32 l1_hdl, 4: list<byte> port_map);
+    McHandle_t mc_l2_node_create(1: res.SessionHandle_t sess_hdl, 2: res.DevTarget_t dev_tgt, 3: i32 l1_hdl, 4: list<byte> port_map, 5: list<byte> lag_map);
     i16 mc_l2_node_destroy(1: res.SessionHandle_t sess_hdl, 2: res.DevTarget_t dev_tgt, 3: i32 l2_hdl);
-    i16 mc_l2_node_update(1: res.SessionHandle_t sess_hdl, 2: res.DevTarget_t dev_tgt, 3: i32 l2_hdl, 4: list<byte> port_map);
+    i16 mc_l2_node_update(1: res.SessionHandle_t sess_hdl, 2: res.DevTarget_t dev_tgt, 3: i32 l2_hdl, 4: list<byte> port_map, 5: list<byte> lag_map);
+    i16 mc_lag_update(1: res.SessionHandle_t sess_hdl, 2: byte dev_id, 3: i16 lag_index, 4: list<byte> port_map);
 //:: #endif
 }
