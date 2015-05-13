@@ -47,9 +47,9 @@ public:
       return (::mc_l1_associate_node(sess_hdl, mgrp_hdl, l1_hdl));
   }
 
-  McHandle_t mc_l2_node_create(const SessionHandle_t sess_hdl, const DevTarget_t& dev_tgt, const int32_t l1_hdl, const std::vector<int8_t> & port_map) {
+  McHandle_t mc_l2_node_create(const SessionHandle_t sess_hdl, const DevTarget_t& dev_tgt, const int32_t l1_hdl, const std::vector<int8_t> & port_map, const std::vector<int8_t> & lag_map) {
       p4_pd_entry_hdl_t pd_entry;
-      ::mc_l2_node_create(sess_hdl, l1_hdl, (uint8_t *)&port_map[0], &pd_entry);
+      ::mc_l2_node_create(sess_hdl, l1_hdl, (uint8_t *)&port_map[0], (uint8_t *)&lag_map[0], &pd_entry);
       return pd_entry;
   }
 
@@ -57,8 +57,12 @@ public:
       return ::mc_l2_node_destroy(sess_hdl, l2_hdl);
   }
 
-  int16_t mc_l2_node_update(const SessionHandle_t sess_hdl, const DevTarget_t& dev_tgt, const int32_t l2_hdl, const std::vector<int8_t> & port_map) {
-      return (::mc_l2_node_update(sess_hdl, l2_hdl, (uint8_t *)&port_map[0]));
+  int16_t mc_l2_node_update(const SessionHandle_t sess_hdl, const DevTarget_t& dev_tgt, const int32_t l2_hdl, const std::vector<int8_t> & port_map, const std::vector<int8_t> & lag_map) {
+      return (::mc_l2_node_update(sess_hdl, l2_hdl, (uint8_t *)&port_map[0], (uint8_t *)&lag_map[0]));
+  }
+
+  int16_t mc_lag_update(const SessionHandle_t sess_hdl, const int8_t dev_id, const int16_t lag_index, const std::vector<int8_t> & port_map) {
+    return (::mc_l2_lag_update(sess_hdl, dev_id, lag_index, (uint8_t *)&port_map[0]));
   }
 //:: #endif
 

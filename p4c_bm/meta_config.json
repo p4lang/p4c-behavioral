@@ -13,8 +13,9 @@
 	},
 	"pre_metadata" : {
             "eg_mcast_group": "intrinsic_metadata_eg_mcast_group",
-            "replication_id": "intrinsic_metadata_replication_id"
-	}
+            "replication_id": "intrinsic_metadata_replication_id",
+            "lag_hash": "intrinsic_metadata_lag_hash"
+    }
     },
     "meta_carry" : [
 	"standard_metadata"
