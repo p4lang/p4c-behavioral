@@ -26,8 +26,8 @@ namespace c_glib p4_pd_rpc
 typedef i32 EntryHandle_t
 typedef i32 MemberHandle_t
 typedef i32 GroupHandle_t
-typedef string MacAddr_t
-typedef string IPv6_t
+typedef binary MacAddr_t
+typedef binary IPv6_t
 
 
 //:: # match_fields is list of tuples (name, type)
@@ -203,7 +203,7 @@ service ${p4_prefix} {
 //::             "EntryHandle_t entry_hdl"]
 //::   param_list = [str(count + 1) + ":" + p for count, p in enumerate(params)]
 //::   param_str = ", ".join(param_list)
-    string ${name}(${param_str});
+    binary ${name}(${param_str});
 //:: #endfor
 
     # Table set default action functions

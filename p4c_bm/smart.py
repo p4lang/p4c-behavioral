@@ -1104,7 +1104,7 @@ def get_thrift_type(byte_width):
     elif byte_width == 16:
         return "IPv6_t"
     else:
-        return "string"
+        return "binary"
 
 def render_dict_create(hlir,
                        p4_name, p4_prefix,
