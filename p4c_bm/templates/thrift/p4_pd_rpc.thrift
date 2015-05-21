@@ -17,6 +17,8 @@
 
 //:: api_prefix = p4_prefix + "_"
 
+include "res.thrift"
+
 namespace py p4_pd_rpc
 namespace cpp p4_pd_rpc
 namespace c_glib p4_pd_rpc
@@ -24,42 +26,10 @@ namespace c_glib p4_pd_rpc
 typedef i32 EntryHandle_t
 typedef i32 MemberHandle_t
 typedef i32 GroupHandle_t
-typedef string MacAddr_t
-typedef string IPv6_t
+typedef binary MacAddr_t
+typedef binary IPv6_t
 
-# Copied from rmt.h
-enum P4LogLevel_t {
- P4_LOG_LEVEL_NONE = 0, # otherwise will it start from 1?
- P4_LOG_LEVEL_FATAL,
- P4_LOG_LEVEL_ERROR,
- P4_LOG_LEVEL_WARN,
- P4_LOG_LEVEL_INFO,
- P4_LOG_LEVEL_VERBOSE,
- P4_LOG_LEVEL_TRACE
-}
 
-typedef i32 SessionHandle_t
-struct DevTarget_t {
-  1: required byte dev_id;
-  2: required i16 dev_pipe_id;
-}
-
-//:: def get_type(byte_width):
-//::   if byte_width == 1:
-//::     return "byte"
-//::   elif byte_width == 2:
-//::     return "i16"
-//::   elif byte_width <= 4:
-//::     return "i32"
-//::   elif byte_width == 6:
-//::     return "MacAddr_t"
-//::   elif byte_width == 16:
-//::     return "IPv6_t"
-//::   else:
-//::     return "string"
-//::   #endif
-//:: #enddef
-//::
 //:: # match_fields is list of tuples (name, type)
 //:: def gen_match_params(match_fields, field_info):
 //::   params = []
@@ -77,7 +47,7 @@ struct DevTarget_t {
 //::   return params
 //:: #enddef
 //::
-//:: def gen_action_params(names, byte_widths, _get_type = get_type):
+//:: def gen_action_params(names, byte_widths, _get_thrift_type = get_thrift_type):
 //::   params = []
 //::   for name, width in zip(names, byte_widths):
 //::     name = "action_" + name
@@ -98,7 +68,7 @@ struct DevTarget_t {
 struct ${api_prefix}${table}_match_spec_t {
 //::   id = 1
 //::   for name, width in match_params:
-//::     type_ = get_type(width)
+//::     type_ = get_thrift_type(width)
   ${id}: required ${type_} ${name};
 //::   id += 1
 //::   #endfor
@@ -118,7 +88,7 @@ struct ${api_prefix}${table}_match_spec_t {
 struct ${api_prefix}${action}_action_spec_t {
 //::   id = 1
 //::   for name, width in action_params:
-//::     type_ = get_type(width)
+//::     type_ = get_thrift_type(width)
   ${id}: required ${type_} ${name};
 //::     id += 1
 //::   #endfor
@@ -135,55 +105,20 @@ struct ${rpc_entry_type} {
 //::   for field in fields:
 //::     bit_width = field_info[field]["bit_width"]
 //::     byte_width = (bit_width + 7 ) / 8
-//::     if byte_width > 4:
-//::       field_definition = "list<byte> %s" % field
-//::     else:
-//::       field_definition = "%s %s" % (get_type(byte_width), field)
-//::     #endif
+//::     field_definition = "%s %s" % (get_thrift_type(byte_width), field)
   ${count}: required ${field_definition};
 //::   count += 1
 //::   #endfor
 }
 
 struct ${rpc_msg_type} {
-  1: required DevTarget_t             dev_tgt;
+  1: required res.DevTarget_t             dev_tgt;
   2: required list<${rpc_entry_type}> msg;
   3: required i64                     msg_ptr;
 }
 //:: #endfor
 
 service ${p4_prefix} {
-    # Test echo interface
-    void echo(1:string s);
-
-    # static functions
-//:: name = "init"
-    void ${name}();
-
-//:: name = "cleanup"
-    void ${name}();
-
-//:: name = "client_init"
-    SessionHandle_t ${name}(1:i32 max_txn_size);
-
-//:: name = "client_cleanup"
-    i32 ${name}(1:SessionHandle_t sess_hdl);
-
-//:: name = "begin_txn"
-    i32 ${name}(1:SessionHandle_t sess_hdl, 2:bool isAtomic, 3:bool isHighPri);
-
-//:: name = "verify_txn"
-    i32 ${name}(1:SessionHandle_t sess_hdl);
-
-//:: name = "abort_txn"
-    i32 ${name}(1:SessionHandle_t sess_hdl);
-
-//:: name = "commit_txn"
-    i32 ${name}(1:SessionHandle_t sess_hdl, 2:bool hwSynchronous);
-
-//:: name = "complete_operations"
-    i32 ${name}(1:SessionHandle_t sess_hdl);
-
     # Table entry add functions
 //:: for table, t_info in table_info.items():
 //::   act_prof = t_info["action_profile"]
@@ -193,8 +128,8 @@ service ${p4_prefix} {
 //::   for action in t_info["actions"]:
 //::     a_info = action_info[action]
 //::     has_action_spec = len(a_info["param_names"]) > 0
-//::     params = ["SessionHandle_t sess_hdl",
-//::               "DevTarget_t dev_tgt"]
+//::     params = ["res.SessionHandle_t sess_hdl",
+//::               "res.DevTarget_t dev_tgt"]
 //::     if has_match_spec:
 //::       params += [api_prefix + table + "_match_spec_t match_spec"]
 //::     #endif
@@ -222,7 +157,7 @@ service ${p4_prefix} {
 //::   for action in t_info["actions"]:
 //::     a_info = action_info[action]
 //::     has_action_spec = len(a_info["param_names"]) > 0
-//::     params = ["SessionHandle_t sess_hdl",
+//::     params = ["res.SessionHandle_t sess_hdl",
 //::               "byte dev_id",
 //::               "EntryHandle_t entry"]
 //::     if has_action_spec:
@@ -238,7 +173,7 @@ service ${p4_prefix} {
     # Table entry delete functions
 //:: for table, t_info in table_info.items():
 //::   name = table + "_table_delete"
-//::   params = ["SessionHandle_t sess_hdl",
+//::   params = ["res.SessionHandle_t sess_hdl",
 //::             "byte dev_id",
 //::             "EntryHandle_t entry"]
 //::   param_list = [str(count + 1) + ":" + p for count, p in enumerate(params)]
@@ -249,13 +184,13 @@ service ${p4_prefix} {
     # Get first entry handle functions
 //:: for table, t_info in table_info.items():
 //::   name = table + "_get_first_entry_handle"
-//::   params = ["SessionHandle_t sess_hdl",
-//::             "DevTarget_t dev_tgt"]
+//::   params = ["res.SessionHandle_t sess_hdl",
+//::             "res.DevTarget_t dev_tgt"]
 //::   param_list = [str(count + 1) + ":" + p for count, p in enumerate(params)]
 //::   param_str = ", ".join(param_list)
     i32 ${name}(${param_str});
 //::   name = table + "_get_next_entry_handles"
-//::   params = ["SessionHandle_t sess_hdl",
+//::   params = ["res.SessionHandle_t sess_hdl",
 //::             "byte dev_id",
 //::             "EntryHandle_t entry_hdl",
 //::             "i32 n"]
@@ -263,12 +198,12 @@ service ${p4_prefix} {
 //::   param_str = ", ".join(param_list)
     list<i32> ${name}(${param_str});
 //::   name = table + "_get_entry"
-//::   params = ["SessionHandle_t sess_hdl",
+//::   params = ["res.SessionHandle_t sess_hdl",
 //::             "byte dev_id",
 //::             "EntryHandle_t entry_hdl"]
 //::   param_list = [str(count + 1) + ":" + p for count, p in enumerate(params)]
 //::   param_str = ", ".join(param_list)
-    string ${name}(${param_str});
+    binary ${name}(${param_str});
 //:: #endfor
 
     # Table set default action functions
@@ -278,8 +213,8 @@ service ${p4_prefix} {
 //::   if act_prof is not None: continue
 //::   for action in t_info["actions"]:
 //::     name = table + "_set_default_action_" + action
-//::     params = ["SessionHandle_t sess_hdl",
-//::               "DevTarget_t dev_tgt"]
+//::     params = ["res.SessionHandle_t sess_hdl",
+//::               "res.DevTarget_t dev_tgt"]
 //::     a_info = action_info[action]
 //::     has_action_spec = len(a_info["param_names"]) > 0
 //::     if has_action_spec:
@@ -303,8 +238,8 @@ service ${p4_prefix} {
 //::   for action in t_info["actions"]:
 //::     a_info = action_info[action]
 //::     has_action_spec = len(a_info["param_names"]) > 0
-//::     params = ["SessionHandle_t sess_hdl",
-//::               "DevTarget_t dev_tgt"]
+//::     params = ["res.SessionHandle_t sess_hdl",
+//::               "res.DevTarget_t dev_tgt"]
 //::     if has_action_spec:
 //::       params += [api_prefix + action + "_action_spec_t action_spec"]
 //::     #endif
@@ -312,7 +247,7 @@ service ${p4_prefix} {
 //::     param_str = ", ".join(param_list)
 //::     name = act_prof + "_add_member_with_" + action
     MemberHandle_t ${name}(${param_str});
-//::     params = ["SessionHandle_t sess_hdl",
+//::     params = ["res.SessionHandle_t sess_hdl",
 //::               "byte dev_id",
 //::		   "MemberHandle_t mbr"]
 //::     if has_action_spec:
@@ -324,7 +259,7 @@ service ${p4_prefix} {
     i32 ${name}(${param_str});
 //::   #endfor
 
-//::   params = ["SessionHandle_t sess_hdl",
+//::   params = ["res.SessionHandle_t sess_hdl",
 //::             "byte dev_id",
 //::             "MemberHandle_t mbr"]
 //::   param_list = [str(count + 1) + ":" + p for count, p in enumerate(params)]
@@ -333,15 +268,15 @@ service ${p4_prefix} {
     i32 ${name}(${param_str});
 
 //::   if not has_selector: continue
-//::   params = ["SessionHandle_t sess_hdl",
-//::             "DevTarget_t dev_tgt",
+//::   params = ["res.SessionHandle_t sess_hdl",
+//::             "res.DevTarget_t dev_tgt",
 //::             "i16 max_grp_size"]
 //::   param_list = [str(count + 1) + ":" + p for count, p in enumerate(params)]
 //::   param_str = ", ".join(param_list)
 //::   name = act_prof + "_create_group"
     GroupHandle_t ${name}(${param_str});
 
-//::   params = ["SessionHandle_t sess_hdl",
+//::   params = ["res.SessionHandle_t sess_hdl",
 //::             "byte dev_id",
 //::             "GroupHandle_t grp"]
 //::   param_list = [str(count + 1) + ":" + p for count, p in enumerate(params)]
@@ -349,7 +284,7 @@ service ${p4_prefix} {
 //::   name = act_prof + "_del_group"
     i32 ${name}(${param_str});
 
-//::   params = ["SessionHandle_t sess_hdl",
+//::   params = ["res.SessionHandle_t sess_hdl",
 //::             "byte dev_id",
 //::             "GroupHandle_t grp",
 //::             "MemberHandle_t mbr"]
@@ -358,7 +293,7 @@ service ${p4_prefix} {
 //::   name = act_prof + "_add_member_to_group"
     i32 ${name}(${param_str});
 
-//::   params = ["SessionHandle_t sess_hdl",
+//::   params = ["res.SessionHandle_t sess_hdl",
 //::             "byte dev_id",
 //::             "GroupHandle_t grp",
 //::             "MemberHandle_t mbr"]
@@ -367,7 +302,7 @@ service ${p4_prefix} {
 //::   name = act_prof + "_del_member_from_group"
     i32 ${name}(${param_str});
 
-//::   params = ["SessionHandle_t sess_hdl",
+//::   params = ["res.SessionHandle_t sess_hdl",
 //::             "byte dev_id",
 //::             "GroupHandle_t grp",
 //::             "MemberHandle_t mbr"]
@@ -376,7 +311,7 @@ service ${p4_prefix} {
 //::   name = act_prof + "_deactivate_group_member"
     i32 ${name}(${param_str});
 
-//::   params = ["SessionHandle_t sess_hdl",
+//::   params = ["res.SessionHandle_t sess_hdl",
 //::             "byte dev_id",
 //::             "GroupHandle_t grp",
 //::             "MemberHandle_t mbr"]
@@ -394,8 +329,8 @@ service ${p4_prefix} {
 //::   match_type = t_info["match_type"]
 //::   has_match_spec = len(t_info["match_fields"]) > 0
 //::   has_action_spec = len(a_info["param_names"]) > 0
-//::   params = ["SessionHandle_t sess_hdl",
-//::             "DevTarget_t dev_tgt"]
+//::   params = ["res.SessionHandle_t sess_hdl",
+//::             "res.DevTarget_t dev_tgt"]
 //::   if has_match_spec:
 //::     params += [api_prefix + table + "_match_spec_t match_spec"]
 //::   #endif
@@ -420,8 +355,8 @@ service ${p4_prefix} {
 //::   act_prof = t_info["action_profile"]
 //::   if act_prof is None: continue
 //::   has_selector = action_profiles[act_prof]["selection_key"] is not None
-//::   params = ["SessionHandle_t sess_hdl",
-//::             "DevTarget_t dev_tgt"]
+//::   params = ["res.SessionHandle_t sess_hdl",
+//::             "res.DevTarget_t dev_tgt"]
 //::   params_wo = params + ["MemberHandle_t mbr"]
 //::   param_list = [str(count + 1) + ":" + p for count, p in enumerate(params_wo)]
 //::   param_str = ", ".join(param_list)
@@ -440,11 +375,11 @@ service ${p4_prefix} {
 
     # clean all state
 //:: name = "clean_all"
-    i32 ${name}(1:SessionHandle_t sess_hdl, 2:DevTarget_t dev_tgt);
+    i32 ${name}(1:res.SessionHandle_t sess_hdl, 2:res.DevTarget_t dev_tgt);
 
     # clean table state
 //:: name = "tables_clean_all"
-    i32 ${name}(1:SessionHandle_t sess_hdl, 2:DevTarget_t dev_tgt);
+    i32 ${name}(1:res.SessionHandle_t sess_hdl, 2:res.DevTarget_t dev_tgt);
 
     # counters
 
@@ -453,15 +388,15 @@ service ${p4_prefix} {
 //::   type_ = c_info["type_"]
 //::   if binding[0] == "direct":
 //::     name = "counter_read_" + counter
-    i64 ${name}(1:SessionHandle_t sess_hdl, 2:DevTarget_t dev_tgt, 3:EntryHandle_t entry);
+    i64 ${name}(1:res.SessionHandle_t sess_hdl, 2:res.DevTarget_t dev_tgt, 3:EntryHandle_t entry);
 
 //::     table = binding[1]
 //::     name = table + "_table_read_" + type_ + "_counter_entry"
-    i64 ${name}(1:SessionHandle_t sess_hdl, 2:DevTarget_t dev_tgt, 3:EntryHandle_t entry);
+    i64 ${name}(1:res.SessionHandle_t sess_hdl, 2:res.DevTarget_t dev_tgt, 3:EntryHandle_t entry);
 
 //::   else:
 //::     name = "counter_read_" + counter
-    i64 ${name}(1:SessionHandle_t sess_hdl, 2:DevTarget_t dev_tgt, 3:i32 index);
+    i64 ${name}(1:res.SessionHandle_t sess_hdl, 2:res.DevTarget_t dev_tgt, 3:i32 index);
 
 //::   #endif
 //:: #endfor
@@ -474,11 +409,11 @@ service ${p4_prefix} {
 //::
 //::     # read counter hit table
 //::     name = table + "_table_read_" + type_ + "_counter_hit"
-    i64 ${name}(1:SessionHandle_t sess_hdl, 2:DevTarget_t dev_tgt);
+    i64 ${name}(1:res.SessionHandle_t sess_hdl, 2:res.DevTarget_t dev_tgt);
 //::
 //::     # read counter miss table
 //::     name = table + "_table_read_" + type_ + "_counter_miss"
-    i64 ${name}(1:SessionHandle_t sess_hdl, 2:DevTarget_t dev_tgt);
+    i64 ${name}(1:res.SessionHandle_t sess_hdl, 2:res.DevTarget_t dev_tgt);
 //::   #endfor
 //:: #endfor
 
@@ -487,8 +422,8 @@ service ${p4_prefix} {
 //:: for meter, m_info in meter_info.items():
 //::   binding = m_info["binding"]
 //::   type_ = m_info["type_"]
-//::   params = ["SessionHandle_t sess_hdl",
-//::             "DevTarget_t dev_tgt"]
+//::   params = ["res.SessionHandle_t sess_hdl",
+//::             "res.DevTarget_t dev_tgt"]
 //::   if binding[0] == "direct":
 //::     entry_or_index = "entry";
 //::     params += ["EntryHandle_t entry"]
@@ -524,30 +459,13 @@ service ${p4_prefix} {
     i32 mirroring_mapping_delete(1:i32 mirror_id);
     i32 mirroring_mapping_get_egress_port(1:i32 mirror_id);
 
-    # control logging
-    
-    void rmt_log_level_set(1:P4LogLevel_t log_level);
-    P4LogLevel_t rmt_log_level_get();
-
-//:: if enable_pre:
-    # Multicast
-    EntryHandle_t mc_mgrp_create(1: SessionHandle_t sess_hdl, 2: DevTarget_t dev_tgt, 3: i32 mgid);
-    i16 mc_mgrp_destroy(1: SessionHandle_t sess_hdl, 2: DevTarget_t dev_tgt, 3: i32 mgid);
-    EntryHandle_t mc_l1_node_create(1: SessionHandle_t sess_hdl, 2: DevTarget_t dev_tgt, 3: i16 rid);
-    i16 mc_l1_node_destroy(1: SessionHandle_t sess_hdl, 2: DevTarget_t dev_tgt, 3: i32 l1_hdl);
-    i16 mc_l1_associate_node(1: SessionHandle_t sess_hdl, 2: DevTarget_t dev_tgt, 3: i32 mgrp_hdl, 4: i32 l1_hdl);
-    EntryHandle_t mc_l2_node_create(1: SessionHandle_t sess_hdl, 2: DevTarget_t dev_tgt, 3: i32 l1_hdl, 4: list<byte> port_map);
-    i16 mc_l2_node_destroy(1: SessionHandle_t sess_hdl, 2: DevTarget_t dev_tgt, 3: i32 l2_hdl);
-    i16 mc_l2_node_update(1: SessionHandle_t sess_hdl, 2: DevTarget_t dev_tgt, 3: i32 l2_hdl, 4: list<byte> port_map);
-//:: #endif
-
-    void set_learning_timeout(1: SessionHandle_t sess_hdl, 2: byte dev_id, 3: i32 msecs);
+    void set_learning_timeout(1: res.SessionHandle_t sess_hdl, 2: byte dev_id, 3: i32 msecs);
 
 //:: for lq in learn_quanta:
 //::   rpc_msg_type = api_prefix + lq["name"] + "_digest_msg_t"
-    void ${lq["name"]}_register(1: SessionHandle_t sess_hdl, 2: byte dev_id);
-    void ${lq["name"]}_deregister(1: SessionHandle_t sess_hdl, 2: byte dev_id);
-    ${rpc_msg_type} ${lq["name"]}_get_digest(1: SessionHandle_t sess_hdl);
-    void ${lq["name"]}_digest_notify_ack(1: SessionHandle_t sess_hdl, 2: i64 msg_ptr);
+    void ${lq["name"]}_register(1: res.SessionHandle_t sess_hdl, 2: byte dev_id);
+    void ${lq["name"]}_deregister(1: res.SessionHandle_t sess_hdl, 2: byte dev_id);
+    ${rpc_msg_type} ${lq["name"]}_get_digest(1: res.SessionHandle_t sess_hdl);
+    void ${lq["name"]}_digest_notify_ack(1: res.SessionHandle_t sess_hdl, 2: i64 msg_ptr);
 //:: #endfor
 }

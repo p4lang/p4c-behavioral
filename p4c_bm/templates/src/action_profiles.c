@@ -211,7 +211,8 @@ int action_profiles_delete_member_from_group(rmt_act_prof_t act_prof_e,
 //::   action_data_width = ap_info["action_data_byte_width"]
 char *action_profiles_get_data_${act_prof}(phv_data_t *phv, char *id) {
   action_profile_t *act_prof = &action_profiles_array[RMT_ACT_PROF_${act_prof}];
-  int index = (unsigned char) (id[2] << 16) + (unsigned char) (id[1] << 8) + (unsigned char) id[0];
+  int index = *(int *) id;
+  index &= 0x00FFFFFF;
   pthread_rwlock_rdlock(&act_prof->lock);
 //::   selection_key = ap_info["selection_key"]
 //::   if selection_key is not None:

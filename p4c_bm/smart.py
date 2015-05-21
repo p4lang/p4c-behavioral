@@ -28,7 +28,8 @@ import pdb
 
 _SMART_DIR = os.path.dirname(os.path.realpath(__file__))
 
-#templates_dir = os.path.join(_SMART_DIR, "templates")
+templates_dir = os.path.join(_SMART_DIR, "templates")
+plugin_base = os.path.join(_SMART_DIR, 'plugin/')
 
 re_brackets = re.compile('[\[\]]')
 
@@ -1082,27 +1083,29 @@ def render_dict_populate_registers(render_dict, hlir):
         register_info[name] = r_info
     render_dict["register_info"] = register_info
 
-def define_field(name, byte_width):
-    if byte_width > 4:
-      field_definition = "uint8_t %s[" + str(byte_width) + "]"
-    elif byte_width == 1:
-      field_definition = "uint8_t %s"
+def get_type(byte_width):
+    if byte_width == 1:
+        return "uint8_t"
     elif byte_width == 2:
-      field_definition = "uint16_t %s"
+        return "uint16_t"
+    elif byte_width <= 4:
+        return "uint32_t"
     else:
-      field_definition = "uint32_t %s"
-    return field_definition % name
+        return "uint8_t *"
 
-def thrift_define_field(name, byte_width):
-    if byte_width > 4:
-      field_definition = "list<byte> %s"
-    elif byte_width == 1:
-      field_definition = "byte %s"
+def get_thrift_type(byte_width):
+    if byte_width == 1:
+        return "byte"
     elif byte_width == 2:
-      field_definition = "i16 %s"
+        return "i16"
+    elif byte_width <= 4:
+        return "i32"
+    elif byte_width == 6:
+        return "MacAddr_t"
+    elif byte_width == 16:
+        return "IPv6_t"
     else:
-      field_definition = "i32 %s"
-    return field_definition % name
+        return "binary"
 
 def render_dict_create(hlir,
                        p4_name, p4_prefix,
@@ -1114,9 +1117,9 @@ def render_dict_create(hlir,
     render_dict["p4_name"] = p4_name
     render_dict["public_inc_path"] = public_inc_path
     render_dict["p4_prefix"] = p4_prefix
-    render_dict["define_field"] = define_field
-    render_dict["thrift_define_field"] = thrift_define_field
     render_dict["p4_pd_prefix"] = "p4_pd_" + p4_prefix + "_"
+    render_dict["get_type"] = get_type
+    render_dict["get_thrift_type"] = get_thrift_type
 
     if not meta_config:
         meta_config_json = json.loads(resource_string(__name__, 'meta_config.json'))
@@ -1177,7 +1180,7 @@ def gen_file_lists(current_dir, gen_dir, public_inc_path):
             files_out.append((template_file, target_file))
     return files_out
 
-def render_all_files(render_dict, gen_dir, templates_dir, with_thrift = False):
+def render_all_files(render_dict, gen_dir, with_thrift = False, with_plugin_list=[]):
     files = gen_file_lists(templates_dir, gen_dir, render_dict["public_inc_path"])
     for template, target in files:
         # not very robust
@@ -1189,4 +1192,16 @@ def render_all_files(render_dict, gen_dir, templates_dir, with_thrift = False):
         with open(target, "w") as f:
             render_template(f, template, render_dict, templates_dir,
                             prefix = gl.tenjin_prefix)
+    if len(with_plugin_list) > 0:
+        for s in with_plugin_list:
+            plugin_dir =  plugin_base + s
+            plugin_files = gen_file_lists(plugin_dir, gen_dir+'/plugin/'+s, render_dict["public_inc_path"])
+            for template, target in plugin_files:
+                path = os.path.dirname(target)
+                if not os.path.exists(path):
+                    os.makedirs(path)
+                with open(target, "w") as f:
+                    render_template(f, template, render_dict, plugin_dir,
+                            prefix = gl.tenjin_prefix)
+
 

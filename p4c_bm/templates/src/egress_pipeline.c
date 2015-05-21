@@ -79,6 +79,8 @@ static void *processing_loop_egress(void *arg) {
 			  e_pkt->metadata, e_pkt->metadata_recirc);
     assert(!fields_get_clone_spec(pipeline->phv));
 
+    fields_set_instance_type(pipeline->phv, e_pkt->pkt.instance_type);
+
     free(e_pkt->metadata);
     free(e_pkt->metadata_recirc);
     if(pipeline->table_entry_fn)  /* empty egress pipeline ? */
