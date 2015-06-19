@@ -61,9 +61,6 @@ typedef binary IPv6_t
 # Match structs
 
 //:: for table, t_info in table_info.items():
-//::   if not t_info["match_fields"]:
-//::     continue
-//::   #endif
 //::   match_params = gen_match_params(t_info["match_fields"], field_info)
 struct ${api_prefix}${table}_match_spec_t {
 //::   id = 1
