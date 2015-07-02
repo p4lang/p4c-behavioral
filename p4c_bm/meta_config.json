@@ -12,9 +12,9 @@
             "lf_field_list": "intrinsic_metadata_lf_field_list"
 	},
 	"pre_metadata" : {
-            "eg_mcast_group": "intrinsic_metadata_eg_mcast_group",
-            "replication_id": "intrinsic_metadata_replication_id",
-            "lag_hash": "intrinsic_metadata_lag_hash"
+            "eg_mcast_group": "intrinsic_metadata_mcast_grp",
+            "replication_id": "intrinsic_metadata_egress_rid",
+            "lag_hash": "intrinsic_metadata_mcast_hash"
     }
     },
     "meta_carry" : [
