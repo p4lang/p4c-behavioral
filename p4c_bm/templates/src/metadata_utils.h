@@ -39,6 +39,15 @@ void metadata_set_${name}(uint8_t *metadata, uint32_t value);
 //::   #endfor
 //:: #endif 
 
+//:: if enable_queue :
+//::   for name, binding in queue_metadata_name_map.items():
+uint32_t metadata_get_${name}(uint8_t *metadata);
+
+void metadata_set_${name}(uint8_t *metadata, uint32_t value);
+
+//::   #endfor
+//:: #endif 
+
 //:: if enable_pre :
 //::   for name, binding in pre_metadata_name_map.items():
 uint32_t metadata_get_${name}(uint8_t *metadata);

@@ -12,6 +12,7 @@ extern "C" {
 #include <p4_sim/pd_static.h>
 #include <p4_sim/pd.h>
 #include <p4_sim/mirroring.h>
+#include <p4_sim/traffic_manager.h>
 #include <p4utils/circular_buffer.h>
 }
 
@@ -850,6 +851,19 @@ public:
   int32_t ${name}(const int32_t mirror_id) {
       std::cerr << "In ${name}\n";
       return ${pd_prefix}${name}(mirror_id);
+  }
+
+
+//:: name = "set_drop_tail_thr"
+  int32_t ${name}(const int32_t drop_tail_size) {
+      std::cerr << "In ${name}\n";
+      return ::${name}(drop_tail_size);
+  }
+
+//:: name = "set_packets_per_sec"
+  int32_t ${name}(const int32_t pps) {
+      std::cerr << "In ${name}\n";
+      return ::${name}(pps);
   }
 
 //:: name = "mirroring_mapping_get_egress_port"

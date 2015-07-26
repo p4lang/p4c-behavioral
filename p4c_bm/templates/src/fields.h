@@ -177,6 +177,20 @@ static inline void fields_set_${name}(phv_data_t *phv, uint32_t value) {
 //::   #endfor
 //:: #endif
 
+//:: if enable_queue:
+//::   for name, binding in queue_metadata_name_map.items():
+//::     f_info = field_info[binding]
+//::     byte_offset_phv = f_info["byte_offset_phv"]
+static inline uint32_t fields_get_${name}(phv_data_t *phv) {
+  return ntohl(phv_buf_field_uint32_get(phv, ${byte_offset_phv}));
+}
+
+static inline void fields_set_${name}(phv_data_t *phv, uint32_t value) {
+  phv_buf_field_uint32_set(phv, ${byte_offset_phv}, htonl(value));
+}
+//::   #endfor
+//:: #endif
+
 //:: if enable_pre:
 //::   for name, binding in pre_metadata_name_map.items():
 //::     f_info = field_info[binding]

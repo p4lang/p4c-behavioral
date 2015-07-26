@@ -122,6 +122,11 @@ static void *pkt_processing_loop(void *arg) {
     pkt_instance_type_t instance_type = b_pkt->instance_type;
     metadata_set_instance_type(metadata, instance_type);
     RMT_LOG(P4_LOG_LEVEL_TRACE, "instance type set to %d\n", instance_type);
+
+//::  if enable_queue:
+    /* Set enqueue metadata */
+    metadata_set_enq_timestamp(metadata, get_timestamp());
+//::  #endif 
     
     metadata_dump(q_pkt->metadata, metadata);
     egress_pipeline_receive(egress_port,

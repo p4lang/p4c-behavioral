@@ -308,15 +308,18 @@ def render_dict_populate_fields(render_dict, hlir, meta_config_json):
     # This maps metadata short names to full references
     metadata_name_map = config["meta_mappings"]["standard_metadata"]
     intrinsic_metadata_name_map = config["meta_mappings"]["intrinsic_metadata"]
+    queue_metadata_name_map = config["meta_mappings"]["queue_metadata"]
     pre_metadata_name_map = config["meta_mappings"]["pre_metadata"]
     render_dict["metadata_name_map"] = metadata_name_map
     render_dict["intrinsic_metadata_name_map"] = intrinsic_metadata_name_map
+    render_dict["queue_metadata_name_map"] = queue_metadata_name_map
     render_dict["pre_metadata_name_map"] = pre_metadata_name_map
 
     # Calculate offsets for metadata entries
     offset = 0
     metadata_offsets = {}
     num_intrinsic_metadata = 0
+    num_queue_metadata = 0
     num_pre_metadata = 0
     for header_instance in map(get_name, headers_non_virtual):
         h_info = render_dict["header_info"][header_instance]
@@ -327,14 +330,19 @@ def render_dict_populate_fields(render_dict, hlir, meta_config_json):
                 elif field in intrinsic_metadata_name_map.values():
                     num_intrinsic_metadata += 1
                     metadata_offsets[field] = offset
+                elif field in queue_metadata_name_map.values():
+                    num_queue_metadata += 1
+                    metadata_offsets[field] = offset
                 elif field in pre_metadata_name_map.values():
                     num_pre_metadata += 1
                     metadata_offsets[field] = offset
                 offset += render_dict["field_info"][field]["byte_width_phv"]
+    enable_queue = 1 if len(queue_metadata_name_map) == num_queue_metadata else 0
     enable_intrinsic = 1 if len(intrinsic_metadata_name_map) == num_intrinsic_metadata else 0
     enable_pre = 1 if len(pre_metadata_name_map) == num_pre_metadata else 0
     render_dict["metadata_offsets"] = metadata_offsets
     render_dict["enable_intrinsic"] = enable_intrinsic
+    render_dict["enable_queue"] = enable_queue
     render_dict["enable_pre"] = enable_pre
 
 

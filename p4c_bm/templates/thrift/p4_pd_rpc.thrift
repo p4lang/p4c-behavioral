@@ -456,6 +456,11 @@ service ${p4_prefix} {
     i32 mirroring_mapping_delete(1:i32 mirror_id);
     i32 mirroring_mapping_get_egress_port(1:i32 mirror_id);
 
+
+    # TM api
+    i32 set_drop_tail_thr(1:i32 drop_tail_size);
+    i32 set_packets_per_sec(1:i32 pps);
+
     void set_learning_timeout(1: res.SessionHandle_t sess_hdl, 2: byte dev_id, 3: i32 msecs);
 
 //:: for lq in learn_quanta:

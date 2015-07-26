@@ -11,11 +11,15 @@
 	"intrinsic_metadata" : {
             "lf_field_list": "intrinsic_metadata_lf_field_list"
 	},
+	"queue_metadata" : {
+	    "enq_timestamp": "intrinsic_metadata_enq_timestamp",
+	    "deq_timedelta": "intrinsic_metadata_deq_timedelta"
+	},
 	"pre_metadata" : {
             "eg_mcast_group": "intrinsic_metadata_mcast_grp",
             "replication_id": "intrinsic_metadata_egress_rid",
             "lag_hash": "intrinsic_metadata_mcast_hash"
-    }
+	}
     },
     "meta_carry" : [
 	"standard_metadata"

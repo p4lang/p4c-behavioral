@@ -45,9 +45,34 @@ typedef struct egress_pkt_s {
   int egress;
 } egress_pkt_t;
 
-#define EGRESS_CB_SIZE 1024
+static atomic_int_t EGRESS_CB_SIZE;
+static atomic_int_t USEC_INTERVAL;
 
 static pipeline_t **egress_pipeline_instances;
+
+void free_egress_pkt(void* e_pkt) {
+  free(((egress_pkt_t *)e_pkt)->pkt.pkt_data);
+  free(((egress_pkt_t *)e_pkt)->metadata);
+  free(((egress_pkt_t *)e_pkt)->metadata_recirc);
+  free(e_pkt);
+}
+
+int set_drop_tail_thr(const int thr) {
+  write_atomic_int(&EGRESS_CB_SIZE, thr);
+  RMT_LOG(P4_LOG_LEVEL_INFO, "Set drop tail threshold to %d\n", thr);
+  int i = 0;
+  for (i = 0; i < NB_THREADS_PER_PIPELINE; i++) {
+    cb_resize(egress_pipeline_instances[i]->cb_in,
+	      read_atomic_int(&EGRESS_CB_SIZE), free_egress_pkt);
+  }
+  return 0;
+}
+
+int set_packets_per_sec(const int pps) {
+  write_atomic_int(&USEC_INTERVAL, 1000000.0 / pps);
+  RMT_LOG(P4_LOG_LEVEL_INFO, "Set USEC_INTERVAL to %lu\n", USEC_INTERVAL);
+  return 0;
+}
 
 static void egress_cloning(pipeline_t *pipeline, egress_pkt_t *e_pkt) {
   RMT_LOG(P4_LOG_LEVEL_TRACE, "egress_cloning\n");
@@ -62,7 +87,24 @@ static void *processing_loop_egress(void *arg) {
   pipeline_t *pipeline = (pipeline_t *) arg;
   circular_buffer_t *cb_in = pipeline->cb_in;
 
+#ifdef RATE_LIMITING
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  uint64_t next_deque = tv.tv_sec * 1000000 + tv.tv_usec +
+  read_atomic_int(&USEC_INTERVAL);
+#endif
+
   while(1) {
+#ifdef RATE_LIMITING
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    uint64_t now_us = tv.tv_sec * 1000000 + tv.tv_usec;
+    //RMT_LOG(P4_LOG_LEVEL_TRACE, "next_deque %lu, now_us %lu\n", next_deque, now_us);
+    if(next_deque > now_us) {
+      usleep(next_deque - now_us);
+    }
+    next_deque += read_atomic_int(&USEC_INTERVAL);
+#endif
     egress_pkt_t *e_pkt = (egress_pkt_t *) cb_read(cb_in);
     if (e_pkt == NULL) continue;
     buffered_pkt_t *b_pkt = &e_pkt->pkt;
@@ -80,6 +122,12 @@ static void *processing_loop_egress(void *arg) {
     assert(!fields_get_clone_spec(pipeline->phv));
 
     fields_set_instance_type(pipeline->phv, e_pkt->pkt.instance_type);
+
+//:: if enable_queue:
+    /* Set dequeue metadata */
+    uint64_t enq_timestamp = fields_get_enq_timestamp(pipeline->phv);
+    fields_set_deq_timedelta(pipeline->phv, get_timestamp()-enq_timestamp);
+//:: #endif
 
     free(e_pkt->metadata);
     free(e_pkt->metadata_recirc);
@@ -123,7 +171,11 @@ static void *processing_loop_egress(void *arg) {
 pipeline_t *pipeline_create(int id) {
   pipeline_t *pipeline = malloc(sizeof(pipeline_t));
   pipeline->name = "egress";
-  pipeline->cb_in = cb_init(EGRESS_CB_SIZE, CB_WRITE_BLOCK, CB_READ_BLOCK);
+#ifdef RATE_LIMITING
+  pipeline->cb_in = cb_init(read_atomic_int(&EGRESS_CB_SIZE), CB_WRITE_DROP, CB_READ_RETURN);
+#else
+  pipeline->cb_in = cb_init(read_atomic_int(&EGRESS_CB_SIZE), CB_WRITE_BLOCK, CB_READ_BLOCK);
+#endif
   pipeline->parse_state_start = parse_state_start;
 //:: if egress_entry_table is not None:
   pipeline->table_entry_fn = tables_apply_${egress_entry_table};
@@ -171,6 +223,9 @@ int egress_pipeline_receive(int egress,
 
 int egress_pipeline_init(void) {
   egress_pipeline_instances = malloc(NB_THREADS_PER_PIPELINE * sizeof(void *));
+  write_atomic_int(&USEC_INTERVAL, 2400); // roughly 5Mbps with 1.5KB packets
+  //write_atomic_int(&USEC_INTERVAL, 1200); // roughly 10Mbps with 1.5KB packets
+  write_atomic_int(&EGRESS_CB_SIZE, 5);
   int i;
   for (i = 0; i < NB_THREADS_PER_PIPELINE; i++) {
     egress_pipeline_instances[i] = pipeline_create(i);
