@@ -27,6 +27,7 @@ limitations under the License.
 #include <stdlib.h>
 #include <netinet/in.h>
 #include <string.h>
+#include <pthread.h>
 
 #define PD_DEBUG 1
 
@@ -891,35 +892,66 @@ ${name}
  * @param sess_hdl
  * @param dev_tgt
  * @param entry_hdl
+ * @param flags
 */
-uint64_t
+p4_pd_counter_value_t
 ${name}
 (
  p4_pd_sess_hdl_t sess_hdl,
  p4_pd_dev_target_t dev_tgt,
- p4_pd_entry_hdl_t entry_hdl
+ p4_pd_entry_hdl_t entry_hdl,
+ int flags
 )
 {
-  return stateful_read_counter(&counter_${counter}, entry_hdl);
+  (void) flags;
+  p4_pd_counter_value_t counter_value;
+//::     c_name = counter
+//::     if type_ == "packets" or type_ == "packets_and_bytes":
+//::       if type_ == "packets_and_bytes":
+//::         c_name = counter + "_packets"
+//::       #endif
+  counter_value.packets = stateful_read_counter(&counter_${c_name}, entry_hdl);
+//::     #endif
+//::     if type_ == "bytes" or type_ == "packets_and_bytes":
+//::       if type_ == "packets_and_bytes":
+//::         c_name = counter + "_bytes"
+//::       #endif
+  counter_value.bytes = stateful_read_counter(&counter_${c_name}, entry_hdl);
+//::     #endif
+  return counter_value;
 }
 
-//::     table = binding[1]
-//::     name = "p4_pd_" + p4_prefix + "_" + table + "_table_read_" + type_ + "_counter_entry"
+//::     name = "p4_pd_" + p4_prefix + "_counter_write_" + counter
 /**
  * @brief ${name}
  * @param sess_hdl
  * @param dev_tgt
  * @param entry_hdl
+ * @param counter_value
 */
-uint64_t
+p4_pd_status_t
 ${name}
 (
  p4_pd_sess_hdl_t sess_hdl,
  p4_pd_dev_target_t dev_tgt,
- p4_pd_entry_hdl_t entry_hdl
+ p4_pd_entry_hdl_t entry_hdl,
+ p4_pd_counter_value_t counter_value
 )
 {
-  return stateful_read_counter(&counter_${counter}, entry_hdl);
+//::     c_name = counter
+//::     if type_ == "packets" or type_ == "packets_and_bytes":
+//::       if type_ == "packets_and_bytes":
+//::         c_name = counter + "_packets"
+//::       #endif
+  stateful_write_counter(&counter_${c_name}, entry_hdl, counter_value.packets);
+//::     #endif
+//::     if type_ == "bytes" or type_ == "packets_and_bytes":
+//::       if type_ == "packets_and_bytes":
+//::         c_name = counter + "_bytes"
+//::       #endif
+  stateful_write_counter(&counter_${c_name}, entry_hdl, counter_value.bytes);
+//::     #endif
+  return 0;
 }
 
 //::   else:
@@ -929,21 +961,102 @@ ${name}
  * @param sess_hdl
  * @param dev_tgt
  * @param index
+ * @param flags
 */
-uint64_t
+p4_pd_counter_value_t
 ${name}
 (
  p4_pd_sess_hdl_t sess_hdl,
  p4_pd_dev_target_t dev_tgt,
- int index
-)
+ int index,
+ int flags
+ )
 {
-  return stateful_read_counter(&counter_${counter}, index);
+  (void) flags;
+  p4_pd_counter_value_t counter_value;
+//::     c_name = counter
+//::     if type_ == "packets" or type_ == "packets_and_bytes":
+//::       if type_ == "packets_and_bytes":
+//::         c_name = counter + "_packets"
+//::       #endif
+  counter_value.packets = stateful_read_counter(&counter_${c_name}, index);
+//::     #endif
+//::     if type_ == "bytes" or type_ == "packets_and_bytes":
+//::       if type_ == "packets_and_bytes":
+//::         c_name = counter + "_bytes"
+//::       #endif
+  counter_value.bytes = stateful_read_counter(&counter_${c_name}, index);
+//::     #endif
+  return counter_value;
+}
+
+//::     name = "p4_pd_" + p4_prefix + "_counter_write_" + counter
+p4_pd_status_t
+${name}
+(
+ p4_pd_sess_hdl_t sess_hdl,
+ p4_pd_dev_target_t dev_tgt,
+ int index,
+ p4_pd_counter_value_t counter_value
+ )
+{
+//::     c_name = counter
+//::     if type_ == "packets" or type_ == "packets_and_bytes":
+//::       if type_ == "packets_and_bytes":
+//::         c_name = counter + "_packets"
+//::       #endif
+  stateful_write_counter(&counter_${c_name}, index, counter_value.packets);
+//::     #endif
+//::     if type_ == "bytes" or type_ == "packets_and_bytes":
+//::       if type_ == "packets_and_bytes":
+//::         c_name = counter + "_bytes"
+//::       #endif
+  stateful_write_counter(&counter_${c_name}, index, counter_value.bytes);
+//::     #endif
+  return 0;
 }
 
 //::   #endif
 //:: #endfor
 
+typedef struct {
+  p4_pd_stat_sync_cb cb_fn;
+  uint8_t dev_id;
+  void *cb_cookie;
+} sync_cb_arg_t;
+
+static void *sync_cb(void *arg) {
+  sync_cb_arg_t *cb_arg = (sync_cb_arg_t *) arg;
+  cb_arg->cb_fn(cb_arg->dev_id, cb_arg->cb_cookie);
+  free(cb_arg);
+  return NULL;
+}
+
+//:: for counter, c_info in counter_info.items():
+//::   name = "p4_pd_" + p4_prefix + "_counter_hw_sync_" + counter
+p4_pd_status_t
+${name}
+(
+ p4_pd_sess_hdl_t sess_hdl,
+ p4_pd_dev_target_t dev_tgt,
+ p4_pd_stat_sync_cb cb_fn,
+ void *cb_cookie
+ )
+{
+  pthread_t thread;
+  pthread_attr_t attr;
+  pthread_attr_init(&attr);
+  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+  sync_cb_arg_t *cb_arg = (sync_cb_arg_t *) malloc(sizeof(sync_cb_arg_t));
+  cb_arg->cb_fn = cb_fn;
+  cb_arg->dev_id = dev_tgt.device_id;
+  cb_arg->cb_cookie = cb_cookie;
+  pthread_create(&thread, &attr, sync_cb, cb_arg);
+  // I let thread go out of scope, which is okay, it is in detached state
+  return 0;
+}
+
+//:: #endfor
 
 /* GLOBAL TABLE COUNTERS */
 
@@ -1185,6 +1298,7 @@ ${name}
 )
 {
   lf_clean_all();
+  stateful_clean_all();
   return tables_clean_all();
 }
 

@@ -30,11 +30,15 @@ static struct timeval time_init;
 
 struct counter_s {
   uint64_t *instances;
+  size_t num_instances;
+  char *name;
   pthread_mutex_t lock;
 };
 
 struct reg_s {
   char *instances;
+  size_t num_instances;
+  size_t byte_width;
   pthread_mutex_t lock;
 };
 
@@ -54,11 +58,15 @@ typedef struct meter_instance_s {
 
 struct meter_s {
   meter_instance_t *instances;
+  size_t num_instances;
   char *name;
   pthread_mutex_t lock;
 };
 
 //:: for c_name, c_info in counter_info.items():
+//::   type_ = c_info["type_"]
+//::   if type_ == "packets_and_bytes": continue
+//::   instance_count = c_info["instance_count"]
 counter_t counter_${c_name};
 //:: #endfor
 
@@ -70,13 +78,16 @@ meter_t meter_${m_name};
 reg_t reg_${r_name};
 //:: #endfor
 
-void stateful_init_counters(counter_t *counter, size_t num_instances) {
+void stateful_init_counters(counter_t *counter, size_t num_instances, char *name) {
   counter->instances = calloc(num_instances, sizeof(uint64_t));
+  counter->num_instances = num_instances;
+  counter->name = name;
   pthread_mutex_init(&counter->lock, NULL);
 }
 
 void stateful_init_meters(meter_t *meter, size_t num_instances, char *name) {
   meter->instances = calloc(num_instances, sizeof(meter_instance_t));
+  meter->num_instances = num_instances;
   meter->name = name;
   pthread_mutex_init(&meter->lock, NULL);
 }
@@ -84,6 +95,8 @@ void stateful_init_meters(meter_t *meter, size_t num_instances, char *name) {
 void stateful_init_registers(reg_t *reg,
 			     size_t num_instances, size_t byte_width ) {
   reg->instances = calloc(num_instances, byte_width);
+  reg->num_instances = num_instances;
+  reg->byte_width = byte_width;
   pthread_mutex_init(&reg->lock, NULL);
 }
 
@@ -93,6 +106,12 @@ uint64_t stateful_read_counter(counter_t *counter, int index) {
   value = counter->instances[index];
   pthread_mutex_unlock(&counter->lock);
   return value;
+}
+
+void stateful_write_counter(counter_t *counter, int index, uint64_t value) {
+  pthread_mutex_lock(&counter->lock);
+  counter->instances[index] = value;
+  pthread_mutex_unlock(&counter->lock);
 }
 
 void stateful_increase_counter(counter_t *counter, int index, uint64_t value) {
@@ -237,9 +256,11 @@ void stateful_init(void) {
   gettimeofday(&time_init, NULL);
 //:: for c_name, c_info in counter_info.items():
 //::   binding = c_info["binding"]
+//::   type_ = c_info["type_"]
 //::   if binding[0] == "direct": continue
+//::   if type_ == "packets_and_bytes": continue
 //::   instance_count = c_info["instance_count"]
-  stateful_init_counters(&counter_${c_name}, ${instance_count});
+  stateful_init_counters(&counter_${c_name}, ${instance_count}, "${c_name}");
 //:: #endfor
 
 //:: for m_name, m_info in meter_info.items():
@@ -255,5 +276,45 @@ void stateful_init(void) {
 //::   instance_count = r_info["instance_count"]
 //::   byte_width = r_info["byte_width"]
   stateful_init_registers(&reg_${r_name}, ${instance_count}, ${byte_width});
+//:: #endfor
+}
+
+static void stateful_reset_counters(counter_t *counter) {
+  pthread_mutex_lock(&counter->lock);
+  memset(counter->instances, 0, counter->num_instances * sizeof(uint64_t));
+  pthread_mutex_unlock(&counter->lock);
+}
+
+static void stateful_reset_meters(meter_t *meter) {
+  pthread_mutex_lock(&meter->lock);
+  memset(meter->instances, 0, meter->num_instances * sizeof(meter_instance_t));
+  pthread_mutex_unlock(&meter->lock);
+}
+
+static void stateful_reset_registers(reg_t *reg) {
+  pthread_mutex_lock(&reg->lock);
+  memset(reg->instances, 0, reg->num_instances * reg->byte_width);
+  pthread_mutex_unlock(&reg->lock);
+}
+
+void stateful_clean_all(void) {
+//:: for c_name, c_info in counter_info.items():
+//::   binding = c_info["binding"]
+//::   type_ = c_info["type_"]
+//::   if binding[0] == "direct": continue
+//::   if type_ == "packets_and_bytes": continue
+  stateful_reset_counters(&counter_${c_name});
+//:: #endfor
+
+//:: for m_name, m_info in meter_info.items():
+//::   binding = m_info["binding"]
+//::   if binding[0] == "direct": continue
+  stateful_reset_meters(&meter_${m_name});
+//:: #endfor
+
+//:: for r_name, r_info in register_info.items():
+//::   binding = r_info["binding"]
+//::   if binding[0] == "direct": continue
+  stateful_reset_registers(&reg_${r_name});
 //:: #endfor
 }

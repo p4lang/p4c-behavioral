@@ -39,6 +39,11 @@ typedef struct p4_pd_dev_target {
 			 */
 } p4_pd_dev_target_t;
 
+typedef struct p4_pd_counter_value {
+  uint64_t packets;
+  uint64_t bytes;
+} p4_pd_counter_value_t;
+
 p4_pd_status_t
 p4_pd_init(void);
 
@@ -68,5 +73,26 @@ p4_pd_complete_operations(p4_pd_sess_hdl_t shdl);
 
 uint16_t
 p4_pd_dev_port_to_pipe_id(uint16_t dev_port_id);
+
+typedef void (*p4_pd_stat_ent_sync_cb) (int device_id, void *cookie);
+typedef void (*p4_pd_stat_sync_cb) (int device_id, void *cookie);
+
+#define COUNTER_READ_HW_SYNC (1 << 0)
+
+/* mirroring definitions */
+typedef enum {
+    PD_MIRROR_TYPE_NORM = 0,
+    PD_MIRROR_TYPE_COAL,
+    PD_MIRROR_TYPE_MAX
+} p4_pd_mirror_type_e;
+
+typedef enum {
+    PD_DIR_NONE = 0,
+    PD_DIR_INGRESS,
+    PD_DIR_EGRESS,
+    PD_DIR_BOTH
+} p4_pd_direction_t;
+
+typedef uint16_t p4_pd_mirror_id_t;
 
 #endif

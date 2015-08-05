@@ -91,7 +91,13 @@ static void *pkt_processing_loop(void *arg) {
     if(mirror_id == 0) {
       egress_port = metadata_get_egress_spec(metadata);
       /* TODO: formalize somewhere that 511 is the drop port for this target */
+//:: if "ingress_drop_ctl" in extra_metadata_name_map:
+      // program uses the separate ingress_drop_ctl register
+      // a non-zero value means drop
+      if(egress_port = 511 || metadata_get_ingress_drop_ctl(metadata)) {
+//:: else:
       if(egress_port == 511) {
+//:: #endif
 	RMT_LOG(P4_LOG_LEVEL_VERBOSE, "dropping packet at ingress\n");
 	free(b_pkt->pkt_data);
 	free(q_pkt->metadata);
@@ -122,6 +128,12 @@ static void *pkt_processing_loop(void *arg) {
     pkt_instance_type_t instance_type = b_pkt->instance_type;
     metadata_set_instance_type(metadata, instance_type);
     RMT_LOG(P4_LOG_LEVEL_TRACE, "instance type set to %d\n", instance_type);
+
+//::  if enable_intrinsic:
+    /* Set enqueue metadata */
+    metadata_set_enq_qdepth(metadata, egress_pipeline_count(egress_port));
+    metadata_set_enq_timestamp(metadata, get_timestamp());
+//::  #endif 
     
     metadata_dump(q_pkt->metadata, metadata);
     egress_pipeline_receive(egress_port,

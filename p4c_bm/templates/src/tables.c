@@ -271,13 +271,15 @@ static void ${table}_init(void){
   pthread_mutex_init(&table->counters_lock, NULL);
 
 //::   if t_info["bytes_counter"]:
+//::     c_name = t_info["bytes_counter"]
   counter_t *counter_bytes = &counter_${t_info["bytes_counter"]};
-  stateful_init_counters(counter_bytes, ${t_size});
+  stateful_init_counters(counter_bytes, ${t_size}, "${c_name}");
   table->bytes_counters = counter_bytes;
 //::   #endif
 //::   if t_info["packets_counter"]:
+//::     c_name = t_info["packets_counter"]
   counter_t *counter_packets = &counter_${t_info["packets_counter"]};
-  stateful_init_counters(counter_packets, ${t_size});
+  stateful_init_counters(counter_packets, ${t_size}, "${c_name}");
   table->packets_counters = counter_packets;
 //::   #endif
 
