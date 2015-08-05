@@ -264,15 +264,23 @@ void action_${action_name} (phv_data_t *phv, void *action_data) {
   ${call[0]}(phv, bytes_to_uint32(${format_arg(action, args[0])}, ${len_bytes}));
 //::        elif call[0] == "COUNT":
 //::            c_name = args[0][1]
+//::            c2_name = c_name
 //::            c_info = counter_info[c_name]
 //::            index_bytes = arg_byte_width(action, args[1])
-//::            if c_info["type_"] == "packets":
-  stateful_increase_counter(&counter_${c_name},
-			    bytes_to_uint32(${format_arg(action, args[1])}, ${index_bytes}),
+//::            if c_info["type_"] == "packets" or c_info["type_"] == "packets_and_bytes":
+//::              if c_info["type_"] == "packets_and_bytes":
+//::                c2_name = c_name + "_packets"
+//::              #endif
+  stateful_increase_counter(&counter_${c2_name},
+			    bytes_to_uint32(${format_arg_ptr(action, args[1])}, ${index_bytes}),
 			    1);
-//::            else:
-  stateful_increase_counter(&counter_${c_name},
-			    bytes_to_uint32(${format_arg(action, args[1])}, ${index_bytes}),
+//::            #endif
+//::            if c_info["type_"] == "bytes" or c_info["type_"] == "packets_and_bytes":
+//::              if c_info["type_"] == "packets_and_bytes":
+//::                c2_name = c_name + "_bytes"
+//::              #endif
+  stateful_increase_counter(&counter_${c2_name},
+			    bytes_to_uint32(${format_arg_ptr(action, args[1])}, ${index_bytes}),
 			    fields_get_packet_length(phv));
 //::            #endif
 //::        elif call[0] == "EXECUTE_METER":

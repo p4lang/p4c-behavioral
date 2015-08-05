@@ -115,4 +115,14 @@ void metadata_set_${name}(uint8_t *metadata, uint32_t value) {
   *(uint32_t *) (metadata + ${metadata_offsets[binding]}) = htonl(value);
 }
 //::   #endfor
-//:: #endif 
+//:: #endif
+
+//:: for name, binding in extra_metadata_name_map.items():
+uint32_t metadata_get_${name}(uint8_t *metadata) {
+  return ntohl(*(uint32_t *) (metadata + ${metadata_offsets[binding]}));
+}
+
+void metadata_set_${name}(uint8_t *metadata, uint32_t value) {
+  *(uint32_t *) (metadata + ${metadata_offsets[binding]}) = htonl(value);
+}
+//:: #endfor

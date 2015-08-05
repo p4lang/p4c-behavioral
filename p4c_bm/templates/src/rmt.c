@@ -28,6 +28,7 @@ limitations under the License.
 #include "p4_sim/rmt.h"
 #include "rmt_internal.h"
 #include "pkt_manager.h"
+#include "stats.h"
 #include "calculations.h"
 
 rmt_instance_t *rmt_instance;
@@ -42,6 +43,10 @@ void rmt_init(void) {
   calculations_init();
 
   pkt_manager_init();
+
+#ifdef P4RMT_OUTPUT_STATS
+  assert(stats_init() == 0);
+#endif
 }
 
 int rmt_process_pkt(p4_port_t ingress, void *pkt, int len) {
