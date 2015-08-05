@@ -21,7 +21,6 @@ limitations under the License.
 #include "fields.h"
 #include "rmt_internal.h"
 #include "actions.h"
-#include "stats.h"
 #include "stateful.h"
 
 #include <errno.h>
@@ -901,12 +900,6 @@ void tables_apply_${table}(phv_data_t *phv) {
   }
 
   if(action_id >= 0) {
-#ifdef P4RMT_OUTPUT_STATS
-    char *action_name = action_get_name(table->actions[action_id]);
-    stats_packet_visit_table(phv->packet_id,
-                             phv->pipeline_type, phv->id,
-                             "${table}", action_name);
-#endif
     phv->last_entry_hit = index;
     char *action_data;
     if (!entry)

@@ -24,7 +24,6 @@ limitations under the License.
 #include "queuing.h"
 #include "mirroring_internal.h"
 #include "rmt_internal.h"
-#include "stats.h"
 #include "enums.h"
 #include "lf.h"
 
@@ -47,9 +46,6 @@ int pkt_manager_receive(int ingress, void *pkt, int len) {
   void *pkt_data = malloc(len);
   memcpy(pkt_data, pkt, len);
   ++packet_id;
-#ifdef P4RMT_OUTPUT_STATS
-  stats_packet_in(packet_id);
-#endif
   ingress_pipeline_receive(ingress, NULL, NULL,
 			   pkt_data, len, packet_id,
 			   PKT_INSTANCE_TYPE_NORMAL);
@@ -62,9 +58,6 @@ int pkt_manager_transmit(int egress, void *pkt, int len, uint64_t packet_id) {
   t_pkt->egress = egress;
   b_pkt->pkt_data = pkt;
   b_pkt->pkt_len = len;
-#ifdef P4RMT_OUTPUT_STATS
-  stats_packet_out(packet_id);
-#endif
   cb_write(rmt_transmit_cb, t_pkt);
   return 0;
 }

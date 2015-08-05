@@ -24,8 +24,6 @@ limitations under the License.
 #include "rmt_internal.h"
 #include "value_set.h"
 #include "metadata_recirc.h"
-#include "stats.h"
-
 
 typedef void (*ExtractionFn)(phv_data_t *phv, uint8_t *hdr);
 
@@ -194,12 +192,6 @@ static inline void build_key_${state_name}(phv_data_t *phv,
 //::
 ApplyTableFn parse_state_${state_name}(phv_data_t *phv, uint8_t *pkt) {
   RMT_LOG(P4_LOG_LEVEL_TRACE, "parsing ${state_name}\n");
-
-#ifdef P4RMT_OUTPUT_STATS
-  stats_packet_visit_parse_state(phv->packet_id,
-				 phv->pipeline_type, phv->id,
-				 "${state_name}");
-#endif
 
   uint8_t *phv_dst;
   uint8_t *phv_src;

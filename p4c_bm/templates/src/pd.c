@@ -20,7 +20,6 @@ limitations under the License.
 #include "tables.h"
 #include "enums.h"
 #include "value_set.h"
-#include "stats.h"
 #include "lf.h"
 #include "stateful.h"
 #include "pd_ms.h"
