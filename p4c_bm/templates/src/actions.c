@@ -167,7 +167,7 @@ void action_${action_name} (phv_data_t *phv, void *action_data) {
 		       ${format_arg(action, args[0])}, ${dst_bytes},
 		       ${format_arg(action, args[1])}, ${src_bytes});
 //::            #endif
-//::        elif call[0] == "ADD":
+//::        elif call[0] == "ADD" or call[0] == "SUBTRACT":
   {
 //::            dst = args[0][1]
 //::            dst_bytes = field_info[dst]["byte_width_phv"]
@@ -188,10 +188,10 @@ void action_${action_name} (phv_data_t *phv, void *action_data) {
 //::            else:
     const uint8_t *src_ptr2 = ${format_arg(action, args[2])};
 //::            #endif
-    ADD_GENERIC(phv,
-                ${format_arg(action, args[0])}, ${dst_bytes},
-                src_ptr1, ${src_bytes1},
-                src_ptr2, ${src_bytes2});
+    ${call[0]}_GENERIC(phv,
+		       ${format_arg(action, args[0])}, ${dst_bytes},
+		       src_ptr1, ${src_bytes1},
+		       src_ptr2, ${src_bytes2});
   }
 //::        elif call[0] == "SUBTRACT_FROM_FIELD":
 //::            dst = args[0][1]
