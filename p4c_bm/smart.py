@@ -1197,7 +1197,7 @@ def gen_file_lists(current_dir, gen_dir, public_inc_path):
         for filename in files:
             if ignore_template_file(filename):
                 continue
-            relpath = os.path.relpath(os.path.join(root, filename), templates_dir)
+            relpath = os.path.relpath(os.path.join(root, filename), current_dir)
             template_file = relpath
 
             # Put the include files in public include path.
