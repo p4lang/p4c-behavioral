@@ -682,6 +682,9 @@ int tables_set_default_${table}(int action_id, uint8_t *action_data) {
 //:: for table, t_info in table_info.items():
 static inline void build_key_${table}(phv_data_t *phv, uint8_t *key) {
   /* has to be determined at runtime because of virtual instances */
+//::   if t_info["has_mask"]:
+  uint8_t *key_mask = key;
+//::   #endif
   int byte_offset_phv;
   (void)byte_offset_phv; /* Compiler reference */
 //::   key_width = t_info["key_byte_width"]
@@ -708,11 +711,11 @@ static inline void build_key_${table}(phv_data_t *phv, uint8_t *key) {
 //::     #endfor
   };
 //::     if key_width <= 4:
-  *(uint32_t *) key = (*(uint32_t *) key) & (*(uint32_t) big_mask);
+  *(uint32_t *) key_mask = (*(uint32_t *) key_mask) & (*(uint32_t) big_mask);
 //::     else:
   int i;
   for(i = 0; i < ${key_width}; i++) {
-    key[i] &= big_mask[i];
+    key_mask[i] &= big_mask[i];
   }
 //::     #endif
 //::   #endif
