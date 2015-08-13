@@ -20,6 +20,9 @@ import sys
 from p4_hlir.main import HLIR
 import smart
 import shutil
+from pkg_resources import resource_string
+import json
+
 
 def get_parser():
     parser = argparse.ArgumentParser(description='p4c-behavioral arguments')
@@ -111,6 +114,10 @@ def main():
     h.add_preprocessor_args("-D__TARGET_BM__")
     for parg in preprocessor_args:
         h.add_preprocessor_args(parg)
+    # in addition to standard P4 primitives
+    more_primitives = json.loads(resource_string(__name__, 'primitives.json'))
+    h.add_primitives(more_primitives)
+
     if not h.build():
         print "Error while building HLIR"
         sys.exit(1)

@@ -167,7 +167,7 @@ void action_${action_name} (phv_data_t *phv, void *action_data) {
 		       ${format_arg(action, args[0])}, ${dst_bytes},
 		       ${format_arg(action, args[1])}, ${src_bytes});
 //::            #endif
-//::        elif call[0] == "ADD" or call[0] == "SUBTRACT":
+//::        elif call[0] in {"ADD", "SUBTRACT", "SHIFT_LEFT", "SHIFT_RIGHT"}:
   {
 //::            dst = args[0][1]
 //::            dst_bytes = field_info[dst]["byte_width_phv"]
