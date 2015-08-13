@@ -239,7 +239,7 @@ void action_${action_name} (phv_data_t *phv, void *action_data) {
 //::                arg_str = format_arg(action, args[1])
 //::            #endif
   ${call[0]}(phv, ${arg_str});
-//::        elif call[0] == "BIT_XOR" or call[0] == "BIT_AND":
+//::        elif call[0] == "BIT_XOR" or call[0] == "BIT_AND" or call[0] == "BIT_OR":
 //::            args_str = ""
 //::            for arg in args:
 //::                arg_str = format_arg(action, arg) + ", "

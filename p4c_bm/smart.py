@@ -856,7 +856,7 @@ def dump_register_assignments(expression, get_next_register, register_assignment
         if op == "not":
             operand_register = dump_register_assignments(right, get_next_register, register_assignments)
             register_assignments.append((register, "not", operand_register))
-        elif op in {"or", "and", "==", "!=", ">", ">=", "<", "<="}:
+        elif op in {"or", "and", "==", "!=", ">", ">=", "<", "<=", "&"}:
             left_register = dump_register_assignments(left, get_next_register, register_assignments)
             right_register = dump_register_assignments(right, get_next_register, register_assignments)
             register_assignments.append((register, op, left_register, right_register))
