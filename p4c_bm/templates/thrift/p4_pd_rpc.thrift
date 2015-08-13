@@ -29,6 +29,11 @@ typedef i32 GroupHandle_t
 typedef binary MacAddr_t
 typedef binary IPv6_t
 
+struct ${api_prefix}counter_value_t {
+  1: required i64 packets;
+  2: required i64 bytes;
+}
+
 
 //:: # match_fields is list of tuples (name, type)
 //:: def gen_match_params(match_fields, field_info):
@@ -58,9 +63,16 @@ typedef binary IPv6_t
 //::
 //::
 
+struct ${api_prefix}counter_flags_t {
+  1: required bool read_hw_sync;
+}
+
 # Match structs
 
 //:: for table, t_info in table_info.items():
+//::   if not t_info["match_fields"]:
+//::     continue
+//::   #endif
 //::   match_params = gen_match_params(t_info["match_fields"], field_info)
 struct ${api_prefix}${table}_match_spec_t {
 //::   id = 1
@@ -102,7 +114,11 @@ struct ${rpc_entry_type} {
 //::   for field in fields:
 //::     bit_width = field_info[field]["bit_width"]
 //::     byte_width = (bit_width + 7 ) / 8
-//::     field_definition = "%s %s" % (get_thrift_type(byte_width), field)
+//::     if byte_width > 4:
+//::       field_definition = "list<byte> %s" % field
+//::     else:
+//::       field_definition = "%s %s" % (get_thrift_type(byte_width), field)
+//::     #endif
   ${count}: required ${field_definition};
 //::   count += 1
 //::   #endfor
@@ -385,17 +401,28 @@ service ${p4_prefix} {
 //::   type_ = c_info["type_"]
 //::   if binding[0] == "direct":
 //::     name = "counter_read_" + counter
-    i64 ${name}(1:res.SessionHandle_t sess_hdl, 2:res.DevTarget_t dev_tgt, 3:EntryHandle_t entry);
-
-//::     table = binding[1]
-//::     name = table + "_table_read_" + type_ + "_counter_entry"
-    i64 ${name}(1:res.SessionHandle_t sess_hdl, 2:res.DevTarget_t dev_tgt, 3:EntryHandle_t entry);
+    ${api_prefix}counter_value_t ${name}(1:res.SessionHandle_t sess_hdl,
+    2:res.DevTarget_t dev_tgt, 3:EntryHandle_t entry,
+    4:${api_prefix}counter_flags_t flags);
+//::     name = "counter_write_" + counter
+    i32 ${name}(1:res.SessionHandle_t sess_hdl, 2:res.DevTarget_t dev_tgt,
+    3:EntryHandle_t entry, 4:${api_prefix}counter_value_t counter_value);
 
 //::   else:
 //::     name = "counter_read_" + counter
-    i64 ${name}(1:res.SessionHandle_t sess_hdl, 2:res.DevTarget_t dev_tgt, 3:i32 index);
+    ${api_prefix}counter_value_t ${name}(1:res.SessionHandle_t sess_hdl,
+    2:res.DevTarget_t dev_tgt, 3:i32 index, 4:${api_prefix}counter_flags_t
+    flags);
+//::     name = "counter_write_" + counter
+    i32 ${name}(1:res.SessionHandle_t sess_hdl, 2:res.DevTarget_t dev_tgt, 3:i32
+    index, 4:${api_prefix}counter_value_t counter_value);
 
 //::   #endif
+//:: #endfor
+
+//:: for counter, c_info in counter_info.items():
+//::   name = "counter_hw_sync_" + counter
+    i32 ${name}(1:res.SessionHandle_t sess_hdl, 2:res.DevTarget_t dev_tgt);
 //:: #endfor
 
     # global table counters

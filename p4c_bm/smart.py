@@ -313,6 +313,10 @@ def render_dict_populate_fields(render_dict, hlir, meta_config_json):
     render_dict["intrinsic_metadata_name_map"] = intrinsic_metadata_name_map
     render_dict["pre_metadata_name_map"] = pre_metadata_name_map
 
+    render_dict["extra_metadata_name_map"] = {}
+    if "extra_metadata" in config["meta_mappings"]:
+        render_dict["extra_metadata_name_map"] = config["meta_mappings"]["extra_metadata"]
+
     # Calculate offsets for metadata entries
     offset = 0
     metadata_offsets = {}
@@ -856,7 +860,7 @@ def dump_register_assignments(expression, get_next_register, register_assignment
         if op == "not":
             operand_register = dump_register_assignments(right, get_next_register, register_assignments)
             register_assignments.append((register, "not", operand_register))
-        elif op in {"or", "and", "==", "!=", ">", ">=", "<", "<="}:
+        elif op in {"or", "and", "==", "!=", ">", ">=", "<", "<=", "&"}:
             left_register = dump_register_assignments(left, get_next_register, register_assignments)
             right_register = dump_register_assignments(right, get_next_register, register_assignments)
             register_assignments.append((register, op, left_register, right_register))
@@ -1001,29 +1005,54 @@ def render_dict_populate_field_list_calculations(render_dict, hlir):
 def render_dict_populate_counters(render_dict, hlir):
     counter_info = {}
     for name, counter in hlir.p4_counters.items():
-        c_info = {}
-        c_info["type_"] = str(counter.type)
+        type_ = str(counter.type)
 
-        if not counter.binding:
-            c_info["binding"] = ("global", None)
-        elif counter.binding[0] == p4.P4_DIRECT:
-            table = get_table_name(counter.binding[1])
-            c_info["binding"] = ("direct", table)
-            t_info = render_dict["table_info"][table]
-            counter_key = c_info["type_"] + "_counter"
-            assert(not t_info[counter_key])
-            t_info[counter_key] = name
-        elif counter.binding[0] == p4.P4_STATIC:
-            table = get_table_name(counter.binding[1])
-            c_info["binding"] = ("static", table)
+        if type_ == "packets" or type_ == "bytes":
+            c_list = [(name, type_)]
+        elif type_ == "packets_and_bytes":
+            c_list = [(name + "_bytes", "bytes"), (name + "_packets", "packets")]
         else:
             assert(False)
 
-        c_info["saturating"] = counter.saturating
-        c_info["instance_count"] = counter.instance_count
-        c_info["min_width"] = counter.min_width
+        for name, type_ in c_list:
+            c_info = {}
+            c_info["type_"] = type_
 
-        counter_info[name] = c_info
+            if not counter.binding:
+                c_info["binding"] = ("global", None)
+            elif counter.binding[0] == p4.P4_DIRECT:
+                table = get_table_name(counter.binding[1])
+                c_info["binding"] = ("direct", table)
+                t_info = render_dict["table_info"][table]
+                counter_key = type_ + "_counter"
+                assert(not t_info[counter_key])
+                t_info[counter_key] = name
+            elif counter.binding[0] == p4.P4_STATIC:
+                table = get_table_name(counter.binding[1])
+                c_info["binding"] = ("static", table)
+            else:
+                assert(False)
+
+            c_info["saturating"] = counter.saturating
+            c_info["instance_count"] = counter.instance_count
+            c_info["min_width"] = counter.min_width
+
+            counter_info[name] = c_info
+
+        # some kind of dirty hack, even though the one counter has been replaced
+        # by one bytes counter and one packets counter, we still need this
+        # information (mapping name -> type) for the implementation of COUNT()
+        # in actions.c
+        if str(counter.type) == "packets_and_bytes":
+            c_info = {}
+            c_info["type_"] = "packets_and_bytes"
+            c_info["binding"] = ("global", None)
+            c_info["saturating"] = counter.saturating
+            c_info["instance_count"] = counter.instance_count
+            c_info["min_width"] = counter.min_width
+
+            counter_info[counter.name] = c_info
+
     render_dict["counter_info"] = counter_info
 
 def render_dict_populate_meters(render_dict, hlir):

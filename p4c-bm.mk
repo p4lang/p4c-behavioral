@@ -45,6 +45,9 @@ ifdef BM_P4_META_CONFIG
   BM_PARAMS += --meta-config=${BM_P4_META_CONFIG}
 endif
 
+# compile the plugins
+include $(THIS_DIR)/p4c_bm/plugin/p4c-plugin.mk
+
 BM_TEMPLATES_C := $(wildcard ${THIS_DIR}/p4c_bm/templates/src/*.c)
 BM_TEMPLATES_H := $(wildcard ${THIS_DIR}/p4c_bm/templates/src/*.h)
 BM_TEMPLATES_H += $(wildcard ${THIS_DIR}/p4c_bm/templates/src/*.ipp)
@@ -68,6 +71,7 @@ THRIFT_PD_BASENAMES += ${THRIFT_SERVICES}
 
 BM_TENJIN_OUTPUT_THRIFT = $(addprefix ${BM_BUILD_THRIFT_DIR}/, $(addsuffix .thrift, ${THRIFT_FILES}))
 BM_TENJIN_OUTPUT_THRIFT_SERVICES = $(addprefix ${BM_BUILD_THRIFT_DIR}/, $(addsuffix .thrift, ${THRIFT_FILES_WITH_SERVICES}))
+
 
 # Output of Tenjin are the following files:
 # p4c_bm/templates/src/*.c

@@ -247,6 +247,39 @@ ADD_UINT32(phv_data_t *phv,
 }
 
 static inline void
+SUBTRACT_UINT32(phv_data_t *phv,
+		const rmt_field_instance_t dst,
+		const uint8_t *src_ptr1, const int src_len1,
+		const uint8_t *src_ptr2, const int src_len2) {
+  uint8_t *dst_ptr = get_phv_ptr(phv, rmt_field_byte_offset_phv(dst));
+  assert(FIELD_IS_MUTABLE(dst));
+  _SUBTRACT_UINT32(dst_ptr, src_ptr1, src_len1, src_ptr2, src_len2);
+  *(uint32_t *) dst_ptr &= rmt_field_mask(dst);
+}
+
+static inline void
+SHIFT_LEFT_UINT32(phv_data_t *phv,
+		  const rmt_field_instance_t dst,
+		  const uint8_t *src_ptr1, const int src_len1,
+		  const uint8_t *src_ptr2, const int src_len2) {
+  uint8_t *dst_ptr = get_phv_ptr(phv, rmt_field_byte_offset_phv(dst));
+  assert(FIELD_IS_MUTABLE(dst));
+  _SHIFT_LEFT_UINT32(dst_ptr, src_ptr1, src_len1, src_ptr2, src_len2);
+  *(uint32_t *) dst_ptr &= rmt_field_mask(dst);
+}
+
+static inline void
+SHIFT_RIGHT_UINT32(phv_data_t *phv,
+		   const rmt_field_instance_t dst,
+		   const uint8_t *src_ptr1, const int src_len1,
+		   const uint8_t *src_ptr2, const int src_len2) {
+  uint8_t *dst_ptr = get_phv_ptr(phv, rmt_field_byte_offset_phv(dst));
+  assert(FIELD_IS_MUTABLE(dst));
+  _SHIFT_RIGHT_UINT32(dst_ptr, src_ptr1, src_len1, src_ptr2, src_len2);
+  *(uint32_t *) dst_ptr &= rmt_field_mask(dst);
+}
+
+static inline void
 SUBTRACT_FROM_FIELD_UINT32(phv_data_t *phv,
                            rmt_field_instance_t dst,
                            uint8_t *src_ptr, int src_len) {
@@ -271,6 +304,54 @@ ADD_GENERIC(phv_data_t *phv,
   }
   else {
     assert(0 && "Cannot add to non-uint32 field");
+  }
+}
+
+static inline void
+SUBTRACT_GENERIC(phv_data_t *phv,
+		 const rmt_field_instance_t dst, const int dst_len,
+		 const uint8_t *src_ptr1, const int src_len1,
+		 const uint8_t *src_ptr2, const int src_len2) {
+  if (dst_len == 4) {
+    SUBTRACT_UINT32(phv,
+		    dst,
+		    src_ptr1, src_len1,
+		    src_ptr2, src_len2);
+  }
+  else {
+    assert(0 && "Cannot subtract from non-uint32 field");
+  }
+}
+
+static inline void
+SHIFT_LEFT_GENERIC(phv_data_t *phv,
+		   const rmt_field_instance_t dst, const int dst_len,
+		   const uint8_t *src_ptr1, const int src_len1,
+		   const uint8_t *src_ptr2, const int src_len2) {
+  if (dst_len == 4) {
+    SHIFT_LEFT_UINT32(phv,
+		      dst,
+		      src_ptr1, src_len1,
+		      src_ptr2, src_len2);
+  }
+  else {
+    assert(0 && "Cannot subtract from non-uint32 field");
+  }
+}
+
+static inline void
+SHIFT_RIGHT_GENERIC(phv_data_t *phv,
+		    const rmt_field_instance_t dst, const int dst_len,
+		    const uint8_t *src_ptr1, const int src_len1,
+		    const uint8_t *src_ptr2, const int src_len2) {
+  if (dst_len == 4) {
+    SHIFT_RIGHT_UINT32(phv,
+		       dst,
+		       src_ptr1, src_len1,
+		       src_ptr2, src_len2);
+  }
+  else {
+    assert(0 && "Cannot subtract from non-uint32 field");
   }
 }
 
@@ -362,6 +443,12 @@ static inline void
 BIT_AND(phv_data_t *phv, uint8_t *dst, const uint8_t *src1, const uint8_t *src2) {
   // FIXME: Currently support only 32-bit fields.
   (*(uint32_t *)dst) = (*(uint32_t *)src1) & (*(uint32_t *)src2);
+}
+
+static inline void
+BIT_OR(phv_data_t *phv, uint8_t *dst, const uint8_t *src1, const uint8_t *src2) {
+  // FIXME: Currently support only 32-bit fields.
+  (*(uint32_t *)dst) = (*(uint32_t *)src1) | (*(uint32_t *)src2);
 }
 /* static inline void */
 /* ADD_TO_FIELD_generic_uint32 (rmt_field_instance_t dst, uint32_t *src_ptr, int src_bit_width) { */

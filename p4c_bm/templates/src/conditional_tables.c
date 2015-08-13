@@ -61,6 +61,8 @@ void tables_apply_${conditional}(phv_data_t *phv) {
   ${dest_reg} = phv_is_valid_header(phv, RMT_HEADER_INSTANCE_${v1});
 //::     elif operation == "valid_field":
   ${dest_reg} = phv_is_valid_field(phv, RMT_FIELD_INSTANCE_${v1});
+//::     elif operation == "&":
+  ${dest_reg} = (${v1} & ${v2});
 //::     else:
 //::       assert(False)
 //::     #endif

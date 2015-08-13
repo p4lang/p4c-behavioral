@@ -158,3 +158,40 @@ int deparser_produce_metadata(phv_data_t *phv,
 
   return 0;
 }
+
+void deparser_extract_digest(phv_data_t *phv, int *metadata_recirc, uint8_t *buffer, uint16_t *length) {
+    metadata_recirc_set_t *metadata_set = metadata_recirc_init(metadata_recirc);
+    uint8_t *src, *dst;
+    *length = 0;
+//:: for header_instance in ordered_header_instances_non_virtual:
+//::   h_info = header_info[header_instance]
+//::   is_metadata = h_info["is_metadata"]
+//::   bytes = h_info["bit_width"] / 8
+//::   for field in h_info["fields"]:
+//::     f_info = field_info[field]
+//::     d_type = f_info["data_type"]
+//::     byte_offset_phv = f_info["byte_offset_phv"]
+//::     byte_offset_hdr = f_info["byte_offset_hdr"]
+//::     bit_offset_hdr = f_info["bit_offset_hdr"]
+//::     mask = f_info["mask"]
+//::     byte_width_phv = f_info["byte_width_phv"]
+//::     width = f_info["bit_width"]
+    // metadata cannot be virtual, so no need to call PHV_GET_FIELD
+    if(metadata_recirc_is_valid(metadata_set, RMT_FIELD_INSTANCE_${field})) {
+      RMT_LOG(P4_LOG_LEVEL_TRACE, "Extracting recirc-metadata field ${field}\n");
+      src = get_phv_ptr(phv, ${f_info["byte_offset_phv"]});
+      dst = buffer + (*length);
+//::     if d_type == "uint32_t":
+      deparse_uint32(dst, src, 0, ${width});
+//::       width = ((width + 7 ) >> 3)
+      (*length) += ${width};
+//::     elif d_type == "byte_buf_t":
+      deparse_byte_buf(dst, src, ${byte_width_phv});
+      (*length) += ${byte_width_phv};
+//::     #endif
+    }
+//::   #endfor
+//:: #endfor
+
+    free(metadata_set);
+}

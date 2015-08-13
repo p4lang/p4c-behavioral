@@ -167,7 +167,7 @@ int action_profiles_delete_group(rmt_act_prof_t act_prof_e, int index){
   int Rc_int;
   JLD(Rc_int, act_prof->jlarray_groups, index);
   pthread_rwlock_unlock(&act_prof->lock);
-  return Rc_int;
+  return (Rc_int != 1);
 }
 
 int action_profiles_add_member_to_group(rmt_act_prof_t act_prof_e,
@@ -185,7 +185,7 @@ int action_profiles_add_member_to_group(rmt_act_prof_t act_prof_e,
     grp->count++;
   }
   pthread_rwlock_unlock(&act_prof->lock);
-  return Rc_int;
+  return (Rc_int != 1);
 }
 
 int action_profiles_delete_member_from_group(rmt_act_prof_t act_prof_e,
@@ -203,7 +203,7 @@ int action_profiles_delete_member_from_group(rmt_act_prof_t act_prof_e,
     grp->count--;
   }
   pthread_rwlock_unlock(&act_prof->lock);
-  return Rc_int;
+  return (Rc_int != 1);
 }
 
 
