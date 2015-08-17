@@ -79,6 +79,11 @@ static void *processing_loop_ingress(void *arg) {
     /* set standard metadata */
     set_standard_metadata(pipeline, i_pkt);
 
+//::  if enable_queue:
+    /* Set ingress timestamp */
+    fields_set_ingress_global_timestamp(pipeline->phv, get_timestamp());
+//::  #endif 
+
     ApplyTableFn table_entry_fn = parser_parse_pkt(pipeline->phv,
 						   b_pkt->pkt_data, b_pkt->pkt_len,
 						   pipeline->parse_state_start);

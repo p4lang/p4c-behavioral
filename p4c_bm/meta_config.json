@@ -12,6 +12,7 @@
             "lf_field_list": "intrinsic_metadata_lf_field_list"
 	},
 	"queue_metadata" : {
+	    "ingress_global_timestamp": "intrinsic_metadata_ingress_global_timestamp",
 	    "enq_timestamp": "intrinsic_metadata_enq_timestamp",
 	    "deq_timedelta": "intrinsic_metadata_deq_timedelta"
 	},
