@@ -28,6 +28,9 @@ limitations under the License.
 #include <p4_sim/pd.h>
 #include <p4_sim/pre.h>
 
+#define TRUE 1
+#define FALSE 0
+
 #define PRE_PORT_MAP_ARRAY_SIZE ((PRE_PORTS_MAX)/8)
 #define PRE_LAG_MAP_ARRAY_SIZE ((PRE_LAG_MAX)/8)
 
@@ -37,11 +40,12 @@ typedef struct mgrp_ {
     tommy_list l1_list;
 } mgrp_t;
 
+typedef uint32_t mc_l2_node_hdl_t;
 typedef struct l2_node_ {
     uint8_t lag_map[PRE_LAG_MAP_ARRAY_SIZE];
     uint8_t port_map[PRE_PORT_MAP_ARRAY_SIZE];
     bool valid;
-    mc_l1_node_hdl_t l1_hdl;
+    mc_node_hdl_t l1_hdl;
 } l2_node_t;
 
 typedef struct l1_node_ {
@@ -159,7 +163,7 @@ p4_pd_status_t mc_create_session(p4_pd_sess_hdl_t *sess_hdl)
     return 0;
 }
 
-p4_pd_status_t mc_delete_session(p4_pd_sess_hdl_t sess_hdl)
+p4_pd_status_t mc_destroy_session(p4_pd_sess_hdl_t sess_hdl)
 {
     pthread_mutex_lock(&session_lock);
     int Rc_int;
@@ -177,9 +181,9 @@ p4_pd_status_t mc_delete_session(p4_pd_sess_hdl_t sess_hdl)
  @param mgid - Multicast Index
  */
 p4_pd_status_t mc_mgrp_create(p4_pd_sess_hdl_t session,
-                                 int8_t device,
-                                 mgrp_id_t mgid,
-                                 mc_mgrp_hdl_t *mgrp_hdl)
+                              int8_t device,
+                              mgrp_id_t mgid,
+                              mc_mgrp_hdl_t *mgrp_hdl)
 {
     mgrp_t              *mgrp = NULL;
 
@@ -190,7 +194,7 @@ p4_pd_status_t mc_mgrp_create(p4_pd_sess_hdl_t session,
         return 0;
     }
 
-    mgrp->valid = 1;
+    mgrp->valid = TRUE;
     tommy_list_init(&(mgrp->l1_list));
     *mgrp_hdl = MGID_TO_HANDLE(mgid);
     pthread_rwlock_unlock(&mgid_table_lock);
@@ -203,7 +207,7 @@ p4_pd_status_t mc_mgrp_create(p4_pd_sess_hdl_t session,
  @param mgrp_hdl - Multicast Group Handle
  */
 p4_pd_status_t mc_mgrp_destroy(p4_pd_sess_hdl_t session,
-                                  mc_mgrp_hdl_t mgrp_hdl)
+                               mc_mgrp_hdl_t mgrp_hdl)
 {
     mgrp_id_t        mgid = 0;
     mgrp_t          *mgrp = NULL;
@@ -211,7 +215,7 @@ p4_pd_status_t mc_mgrp_destroy(p4_pd_sess_hdl_t session,
     pthread_rwlock_wrlock(&mgid_table_lock);
     mgid = HANDLE_TO_MGID(mgrp_hdl);
     mgrp = &mgid_table[mgid];
-    mgrp->valid = 0;
+    mgrp->valid = FALSE;
     pthread_rwlock_unlock(&mgid_table_lock);
     return 0;
 }
@@ -220,34 +224,145 @@ p4_pd_status_t mc_mgrp_destroy(p4_pd_sess_hdl_t session,
  Create L1 Multicast Node
  @param session - session handle
  @param rid - Replication ID
+ @param port_map - List of member ports
+ @param lag_map - List of LAGs
+ @param l1_hdl - L1 Node handle
  */
-p4_pd_status_t mc_l1_node_create(p4_pd_sess_hdl_t session,
+p4_pd_status_t mc_node_create(p4_pd_sess_hdl_t session,
+                              int8_t device,
                               mgrp_rid_t rid,
-                              mc_l1_node_hdl_t *l1_hdl)
+                              const uint8_t *port_map,
+                              const uint8_t *lag_map,
+                              mc_node_hdl_t *l1_hdl)
 {
+    mc_l2_node_hdl_t      l2_hdl;
     l1_node_t            *l1_node = NULL;
+    l2_node_t            *l2_node = NULL;
     int                   l1_index = 0;
+    int                   l2_index = 0;
 
     pthread_rwlock_wrlock(&l1_table_lock);
+    pthread_rwlock_wrlock(&l2_table_lock);
+
     l1_index = pre_id_allocate(&l1_bmap_allocator);
     l1_node = &l1_table[l1_index];
     l1_node->rid = rid;
-    l1_node->valid = 1;
+    l1_node->valid = TRUE;
+
+    l2_index = pre_id_allocate(&l2_bmap_allocator);
+    l2_node = &l2_table[l2_index];
+    l2_node->valid = TRUE;
+
+    memcpy(l2_node->port_map, port_map, PRE_PORT_MAP_ARRAY_SIZE);
+    memcpy(l2_node->lag_map, lag_map, PRE_LAG_MAP_ARRAY_SIZE);
 
     *l1_hdl = L1_TO_HANDLE(l1_index);
+    l2_hdl = L2_TO_HANDLE(l2_index);
+    l1_node->l2_hdl = l2_hdl;
+    l2_node->l1_hdl = *l1_hdl;
+
+    pthread_rwlock_unlock(&l2_table_lock);
     pthread_rwlock_unlock(&l1_table_lock);
     return 0;
 }
 
 /*
- Associate L1 Node to multicast tree
+ Delete Multicast Node
+ @param session - session handle
+ @param l1_hdl - node handle
+ */
+p4_pd_status_t mc_node_destroy(p4_pd_sess_hdl_t session,
+                               mc_node_hdl_t l1_hdl)
+{
+    l1_node_t              *l1_node = NULL;
+    l2_node_t              *l2_node = NULL;
+    int                     l1_index = 0;
+    int                     l2_index = 0;
+
+    pthread_rwlock_wrlock(&l1_table_lock);
+    l1_index = HANDLE_TO_L1(l1_hdl);
+    l1_node = &l1_table[l1_index];
+
+    if (!l1_node->valid) {
+        pthread_rwlock_unlock(&l1_table_lock);
+        return -1;
+    }
+
+    pthread_rwlock_wrlock(&l2_table_lock);
+    l2_index = HANDLE_TO_L2(l1_node->l2_hdl);
+    l2_node = &l2_table[l2_index];
+    if (!l2_node->valid) {
+        pthread_rwlock_unlock(&l2_table_lock);
+        pthread_rwlock_unlock(&l1_table_lock);
+        return -1;
+    }
+
+    memset(l2_node, 0, sizeof(l2_node_t));
+    l1_node->l2_hdl = 0;
+    pre_id_release(&l2_bmap_allocator, l2_index);
+    pthread_rwlock_unlock(&l2_table_lock);
+
+    memset(l1_node, 0, sizeof(l1_node_t));
+    pre_id_release(&l1_bmap_allocator, l1_index);
+    pthread_rwlock_unlock(&l1_table_lock);
+    return 0;
+}
+
+/*
+ Update L1 Multicast Node
+ @param session - session handle
+ @param l1_hdl - L1 Node handle
+ @param port_map - List of member ports, replaces existing members
+ @param lag_map - List of LAGs
+ */
+p4_pd_status_t mc_node_update(p4_pd_sess_hdl_t session,
+                              mc_node_hdl_t l1_hdl,
+                              const uint8_t *port_map,
+                              const uint8_t *lag_map)
+{
+    l1_node_t            *l1_node = NULL;
+    l2_node_t            *l2_node = NULL;
+    int                   l1_index = 0;
+    int                   l2_index = 0;
+
+    pthread_rwlock_wrlock(&l1_table_lock);
+
+    l1_index = HANDLE_TO_L1(l1_hdl);
+    l1_node = &l1_table[l1_index];
+
+    if (!l1_node->valid) {
+        pthread_rwlock_unlock(&l1_table_lock);
+        return -1;
+    }
+
+    pthread_rwlock_wrlock(&l2_table_lock);
+    l2_index = HANDLE_TO_L2(l1_node->l2_hdl);
+    l2_node = &l2_table[l2_index];
+    if (!l2_node->valid) {
+        pthread_rwlock_unlock(&l2_table_lock);
+        pthread_rwlock_unlock(&l1_table_lock);
+        return -1;
+    }
+
+    memcpy(l2_node->port_map, port_map, PRE_PORT_MAP_ARRAY_SIZE);
+    memcpy(l2_node->lag_map, lag_map, PRE_LAG_MAP_ARRAY_SIZE);
+
+    pthread_rwlock_unlock(&l2_table_lock);
+    pthread_rwlock_unlock(&l1_table_lock);
+    return 0;
+}
+
+/*
+ Associate Node to multicast tree
  @param session - session handle
  @param mgrp_hdl - Multicast Group Handle
- @param l1_hdl - L1 Node Handle
+ @param l1_hdl - Node Handle
+ @param xid_valid - xid valid indicator
+ @param xid - Level 1 Exclusion ID
  */
-p4_pd_status_t mc_l1_associate_node(p4_pd_sess_hdl_t session,
+p4_pd_status_t mc_associate_node(p4_pd_sess_hdl_t session,
                                  mc_mgrp_hdl_t mgrp_hdl,
-                                 mc_l1_node_hdl_t l1_hdl)
+                                 mc_node_hdl_t l1_hdl)
 {
     mgrp_id_t        mgid = 0;
     int              l1_index = 0;
@@ -281,150 +396,50 @@ p4_pd_status_t mc_l1_associate_node(p4_pd_sess_hdl_t session,
 }
 
 /*
- Delete L1 Multicast Node
+ Dissociate Node from multicast tree
  @param session - session handle
- @param l1_hdl - L1 node handle
+ @param mgrp_hdl - Multicast Group Handle
+ @param l1_hdl - Node Handle
  */
-p4_pd_status_t mc_l1_node_destroy(p4_pd_sess_hdl_t session,
-                           mc_l1_node_hdl_t l1_hdl)
+p4_pd_status_t mc_dissociate_node(p4_pd_sess_hdl_t session,
+                                  mc_mgrp_hdl_t mgrp_hdl,
+                                  mc_node_hdl_t l1_hdl)
 {
-    l1_node_t              *l1_node = NULL;
-    int                     l1_index = 0;
-    mgrp_t                 *mgrp = NULL;
+    mgrp_id_t        mgid = 0;
+    int              l1_index = 0;
+    mgrp_t          *mgrp = NULL;
+    l1_node_t       *l1_node = NULL;
 
     pthread_rwlock_wrlock(&mgid_table_lock);
     pthread_rwlock_wrlock(&l1_table_lock);
+    mgid = HANDLE_TO_MGID(mgrp_hdl);
+    mgrp = &mgid_table[mgid];
+    if (!mgrp->valid) {
+        pthread_rwlock_unlock(&l1_table_lock);
+        pthread_rwlock_unlock(&mgid_table_lock);
+        return -1;
+    }
+
     l1_index = HANDLE_TO_L1(l1_hdl);
     l1_node = &l1_table[l1_index];
-
     if (!l1_node->valid) {
         pthread_rwlock_unlock(&l1_table_lock);
         pthread_rwlock_unlock(&mgid_table_lock);
         return -1;
     }
 
-    mgrp = &mgid_table[l1_node->mgid];
+    if (l1_node->mgid != mgid) {
+        pthread_rwlock_unlock(&l1_table_lock);
+        pthread_rwlock_unlock(&mgid_table_lock);
+        return -1;
+    }
+
     l1_node = tommy_list_remove_existing(&(mgrp->l1_list), &(l1_node->node));
-    memset(l1_node, 0, sizeof(l1_node_t));
-    pre_id_release(&l1_bmap_allocator, l1_index);
-    pthread_rwlock_unlock(&l1_table_lock);
     pthread_rwlock_unlock(&mgid_table_lock);
-    return 0;
-}
-
-/*
- Create Level 2 multicast node
- @param session - session handle
- @param l1_hdl - L1 Node handle
- @param port_map - List of ports
- */
-p4_pd_status_t mc_l2_node_create(p4_pd_sess_hdl_t session,
-                              mc_l1_node_hdl_t l1_hdl,
-                              const uint8_t *port_map,
-                              const uint8_t *lag_map,
-                              mc_l2_node_hdl_t *l2_hdl)
-{
-    l1_node_t          *l1_node = NULL;
-    l2_node_t          *l2_node = NULL;
-    int                 l1_index = 0;
-    int                 l2_index = 0;
-
-    pthread_rwlock_wrlock(&l1_table_lock);
-    pthread_rwlock_wrlock(&l2_table_lock);
-    l1_index = HANDLE_TO_L1(l1_hdl);
-    l1_node = &l1_table[l1_index];
-    if (!l1_node->valid) {
-        pthread_rwlock_unlock(&l2_table_lock);
-        pthread_rwlock_unlock(&l1_table_lock);
-        return -1;
-    }
-    
-    l2_index = pre_id_allocate(&l2_bmap_allocator);
-    l2_node = &l2_table[l2_index];
-    l2_node->valid = 1;
-
-    memcpy(l2_node->port_map, port_map, PRE_PORT_MAP_ARRAY_SIZE);
-    memcpy(l2_node->lag_map, lag_map, PRE_LAG_MAP_ARRAY_SIZE);
-
-    *l2_hdl = L2_TO_HANDLE(l2_index);
-    l2_node->l1_hdl = l1_hdl;
-    l1_node->l2_hdl = *l2_hdl;
-    pthread_rwlock_unlock(&l2_table_lock);
     pthread_rwlock_unlock(&l1_table_lock);
     return 0;
 }
 
-/*
- Delete Level 2 multicast node
- @param session - session handle
- @param l2_hdl - L2 Node handle
- */
-p4_pd_status_t mc_l2_node_destroy(p4_pd_sess_hdl_t session,
-                               mc_l2_node_hdl_t l2_hdl)
-{
-    l1_node_t           *l1_node = NULL;
-    l2_node_t           *l2_node = NULL;
-    int                  l1_index = 0;
-    int                  l2_index = 0;
-
-    pthread_rwlock_wrlock(&l1_table_lock);
-    pthread_rwlock_wrlock(&l2_table_lock);
-    l2_index = HANDLE_TO_L2(l2_hdl);
-    l2_node = &l2_table[l2_index];
-    if (!l2_node->valid) {
-        pthread_rwlock_unlock(&l2_table_lock);
-        pthread_rwlock_unlock(&l1_table_lock);
-        return -1;
-    }
-
-    l1_index = HANDLE_TO_L1(l2_node->l1_hdl);
-    l1_node = &l1_table[l1_index];
-    if (!l1_node->valid) {
-        pthread_rwlock_unlock(&l2_table_lock);
-        pthread_rwlock_unlock(&l1_table_lock);
-        return -1;
-    }
-
-    memset(l2_node, 0, sizeof(l2_node_t));
-    // Clear the l2_hdl of l1 node only when they
-    // match. The reason is the application can just
-    // destroy the l2_node but reuse and point it to
-    // different l2_node;
-    if (l1_node->l2_hdl == l2_hdl) {
-        l1_node->l2_hdl = 0;
-    }
-    pre_id_release(&l2_bmap_allocator, l2_index);
-    pthread_rwlock_unlock(&l2_table_lock);
-    pthread_rwlock_unlock(&l1_table_lock);
-    return 0;
-}
-
-/*
- Update Level 2 multicast node
- @param l2_hdl - Level 2 Node handle
- @param port_map - List of ports
- */
-p4_pd_status_t mc_l2_node_update(p4_pd_sess_hdl_t session,
-                              mc_l2_node_hdl_t l2_hdl,
-                              const uint8_t *port_map,
-                              const uint8_t *lag_map)
-{
-    l2_node_t             *l2_node = NULL;
-    int                    l2_index = 0;
-
-    pthread_rwlock_wrlock(&l2_table_lock);
-    l2_index = HANDLE_TO_L2(l2_hdl);
-    l2_node = &l2_table[l2_index];
-    if (!l2_node->valid) {
-        pthread_rwlock_unlock(&l2_table_lock);
-        return -1;
-    }
-
-    memcpy(l2_node->port_map, port_map, PRE_PORT_MAP_ARRAY_SIZE);
-    memcpy(l2_node->lag_map, lag_map, PRE_LAG_MAP_ARRAY_SIZE);
-    pthread_rwlock_unlock(&l2_table_lock);
-    return 0;
-}
 
 /*
  Update Lag table
@@ -432,13 +447,13 @@ p4_pd_status_t mc_l2_node_update(p4_pd_sess_hdl_t session,
  @param lag_id - Lag Index
  @param port_map - List of member ports
  */
-p4_pd_status_t mc_l2_lag_update(p4_pd_sess_hdl_t session,
-                                int8_t dev_id,
-                                mgrp_lag_id_t lag_id,
-                                const uint8_t *port_map)
+p4_pd_status_t mc_set_lag_membership(p4_pd_sess_hdl_t session,
+                                     int8_t dev_id,
+                                     mgrp_lag_id_t lag_id,
+                                     const uint8_t *port_map)
 {
     lag_t        *lag = NULL;
-    bool          port_set = 0;
+    bool          port_set = FALSE;
     int           i = 0, j = 0;
 
     pthread_rwlock_wrlock(&lag_table_lock);
@@ -457,13 +472,9 @@ p4_pd_status_t mc_l2_lag_update(p4_pd_sess_hdl_t session,
     return 0;
 }
 
-static int mc_compute_metadata_recirc_length(int *metadata_recirc)
+p4_pd_status_t mc_complete_operations(p4_pd_sess_hdl_t session)
 {
-    int length = 0;
-    if (metadata_recirc) {
-        length = (*metadata_recirc + 1) * sizeof(int);
-    }
-    return length;
+    return 0;
 }
 
 /*
@@ -476,7 +487,7 @@ static int mc_lag_compute_hash(uint16_t lag_hash, mgrp_lag_id_t lag_index)
     uint8_t              port_count2 = 0;
     lag_t               *lag_entry = NULL;
     int                  i = 0, j = 0;
-    bool                 port_set = 0;
+    bool                 port_set = FALSE;
     mgrp_port_id_t       port_id = 0;
 
     lag_entry = &lag_table[lag_index];
@@ -496,6 +507,15 @@ static int mc_lag_compute_hash(uint16_t lag_hash, mgrp_lag_id_t lag_index)
     return port_id;
 }
 
+static int mc_compute_metadata_recirc_length(int *metadata_recirc)
+{
+    int length = 0;
+    if (metadata_recirc) {
+        length = (*metadata_recirc + 1) * sizeof(int);
+    }
+    return length;
+}
+
 /*
  Check for pruning and replicates packet for every L2 Node
  @param l2_hdl - Level 2 Node handle
@@ -511,8 +531,8 @@ static void mc_replicate_packet(mc_l2_node_hdl_t l2_hdl, mgrp_rid_t rid,
     mgrp_port_id_t     lag_port_id = 0;
     mgrp_lag_id_t      lag_index = 0;
     l2_node_t          *l2_node = NULL;
-    bool               port_is_set = 0;
-    bool               lag_is_set = 0;
+    bool               port_is_set = FALSE;
+    bool               lag_is_set = FALSE;
     int                i = 0, j = 0;
     int                l2_index = 0;
     int                metadata_recirc_length = 0;

@@ -47,4 +47,11 @@ void metadata_set_${name}(uint8_t *metadata, uint32_t value);
 
 //::   #endfor
 //:: #endif 
+
+//:: for name, binding in extra_metadata_name_map.items():
+uint32_t metadata_get_${name}(uint8_t *metadata);
+
+void metadata_set_${name}(uint8_t *metadata, uint32_t value);
+
+//:: #endfor
 #endif

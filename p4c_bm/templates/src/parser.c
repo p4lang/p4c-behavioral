@@ -25,7 +25,6 @@ limitations under the License.
 #include "value_set.h"
 #include "metadata_recirc.h"
 
-
 typedef void (*ExtractionFn)(phv_data_t *phv, uint8_t *hdr);
 
 /* An extract function is defined for each header instance. */
@@ -330,7 +329,7 @@ ApplyTableFn parse_state_${state_name}(phv_data_t *phv, uint8_t *pkt) {
 //:: #endfor
 
 static uint8_t *parser_extract_metadata_full(phv_data_t *phv, uint8_t *pkt) {
-  RMT_LOG(P4_LOG_LEVEL_TRACE, "extracting all metadata\n");
+  RMT_LOG(P4_LOG_LEVEL_TRACE, "extracting all metadata for %p\n", pkt);
 //:: for header_instance in ordered_header_instances_non_virtual:
 //::   h_info = header_info[header_instance]
 //::   is_metadata = h_info["is_metadata"]

@@ -22,48 +22,58 @@ public:
   }
 
 //:: if enable_pre:
-  // Multicast RPC API's
-  McHandle_t mc_mgrp_create(const SessionHandle_t sess_hdl, const DevTarget_t& dev_tgt, const int32_t mgid) {
-        p4_pd_entry_hdl_t pd_entry;
-        ::mc_mgrp_create(sess_hdl, dev_tgt.dev_id, mgid, &pd_entry);
-        return pd_entry;
+
+  int32_t mc_init(){
+    return 0;
   }
 
-  int16_t mc_mgrp_destroy(const SessionHandle_t sess_hdl, const DevTarget_t& dev_tgt, const int32_t mgid) {
-      return (::mc_mgrp_destroy(sess_hdl, mgid));
+  SessionHandle_t mc_create_session(){
+    SessionHandle_t sess_hdl;
+    ::mc_create_session((uint32_t*)&sess_hdl);
+    return sess_hdl;
   }
 
-  McHandle_t mc_l1_node_create(const SessionHandle_t sess_hdl, const DevTarget_t& dev_tgt, const int16_t rid) {
-      p4_pd_entry_hdl_t pd_entry;
-      ::mc_l1_node_create(sess_hdl, rid, &pd_entry);
-      return pd_entry;
+  int32_t mc_destroy_session(const SessionHandle_t sess_hdl){
+    return ::mc_destroy_session(sess_hdl);
   }
 
-  int16_t mc_l1_node_destroy(const SessionHandle_t sess_hdl, const DevTarget_t& dev_tgt, const int32_t l1_hdl) {
-      return (::mc_l1_node_destroy(sess_hdl, l1_hdl));
+  McHandle_t mc_mgrp_create(const SessionHandle_t sess_hdl, const int dev, const int16_t mgid){
+    McHandle_t grp_hdl;
+    ::mc_mgrp_create(sess_hdl, dev, mgid, (uint32_t*)&grp_hdl);
+    return grp_hdl;
   }
 
-  int16_t mc_l1_associate_node(const SessionHandle_t sess_hdl, const DevTarget_t& dev_tgt, const int32_t mgrp_hdl, const int32_t l1_hdl)  {
-      return (::mc_l1_associate_node(sess_hdl, mgrp_hdl, l1_hdl));
+  int32_t mc_mgrp_destroy(const SessionHandle_t sess_hdl, const int dev, const McHandle_t grp_hdl){
+    return ::mc_mgrp_destroy(sess_hdl, grp_hdl);
   }
 
-  McHandle_t mc_l2_node_create(const SessionHandle_t sess_hdl, const DevTarget_t& dev_tgt, const int32_t l1_hdl, const std::vector<int8_t> & port_map, const std::vector<int8_t> & lag_map) {
-      p4_pd_entry_hdl_t pd_entry;
-      ::mc_l2_node_create(sess_hdl, l1_hdl, (uint8_t *)&port_map[0], (uint8_t *)&lag_map[0], &pd_entry);
-      return pd_entry;
+  McHandle_t mc_node_create(const SessionHandle_t sess_hdl, const int dev, const int16_t rid, const std::string &port_map, const std::string &lag_map){
+    McHandle_t l1_hdl;
+    ::mc_node_create(sess_hdl, dev, rid, (uint8_t*)port_map.c_str(), (uint8_t*)lag_map.c_str(), (uint32_t*)&l1_hdl);
+    return l1_hdl;
   }
 
-  int16_t mc_l2_node_destroy(const SessionHandle_t sess_hdl, const DevTarget_t& dev_tgt, const int32_t l2_hdl) {
-      return ::mc_l2_node_destroy(sess_hdl, l2_hdl);
+  McHandle_t mc_node_update(const SessionHandle_t sess_hdl, const int dev,  const McHandle_t node_hdl, const std::string &port_map, const std::string &lag_map){
+    return ::mc_node_update(sess_hdl, node_hdl, (uint8_t*)port_map.c_str(), (uint8_t*)lag_map.c_str());
   }
 
-  int16_t mc_l2_node_update(const SessionHandle_t sess_hdl, const DevTarget_t& dev_tgt, const int32_t l2_hdl, const std::vector<int8_t> & port_map, const std::vector<int8_t> & lag_map) {
-      return (::mc_l2_node_update(sess_hdl, l2_hdl, (uint8_t *)&port_map[0], (uint8_t *)&lag_map[0]));
+  int32_t mc_node_destroy(const SessionHandle_t sess_hdl, const int dev, const McHandle_t node_hdl){
+    return ::mc_node_destroy(sess_hdl, node_hdl);
   }
 
-  int16_t mc_lag_update(const SessionHandle_t sess_hdl, const int8_t dev_id, const int16_t lag_index, const std::vector<int8_t> & port_map) {
-    return (::mc_l2_lag_update(sess_hdl, dev_id, lag_index, (uint8_t *)&port_map[0]));
+  int32_t mc_associate_node(const SessionHandle_t sess_hdl, const int dev, const McHandle_t grp_hdl, const McHandle_t l1_hdl){
+    return ::mc_associate_node(sess_hdl, grp_hdl, l1_hdl);
   }
+
+  int32_t mc_dissociate_node(const SessionHandle_t sess_hdl, const int dev, const McHandle_t grp_hdl, const McHandle_t l1_hdl){
+    return ::mc_dissociate_node(sess_hdl, grp_hdl, l1_hdl);
+  }
+
+  int32_t mc_set_lag_membership(const SessionHandle_t sess_hdl, const int dev, const int8_t lag, const std::string &port_map){
+    int32_t y = ::mc_set_lag_membership(sess_hdl, dev, lag, (uint8_t*)port_map.c_str());
+    return y;
+  }
+
 //:: #endif
 
 };

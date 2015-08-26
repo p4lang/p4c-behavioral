@@ -35,6 +35,8 @@ typedef struct reg_s reg_t;
 /* TODO: make something more like field lists ? */
 
 //:: for c_name, c_info in counter_info.items():
+//::   type_ = c_info["type_"]
+//::   if type_ == "packets_and_bytes": continue
 extern counter_t counter_${c_name};
 //:: #endfor
 
@@ -48,10 +50,12 @@ extern reg_t reg_${r_name};
 
 void stateful_init(void);
 
-void stateful_init_counters(counter_t *counter, size_t num_instances);
+void stateful_init_counters(counter_t *counter, size_t num_instances, char *name);
 uint64_t stateful_read_counter(counter_t *counter, int index);
+void stateful_write_counter(counter_t *counter, int index, uint64_t value);
 void stateful_increase_counter(counter_t *counter, int index, uint64_t value);
 void stateful_reset_counter(counter_t *counter, int index);
+void stateful_clean_all(void);
 
 void stateful_init_meters(meter_t *meter, size_t num_instances, char *name);
 void stateful_reset_meter(meter_t *meter, int index);
