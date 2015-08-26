@@ -363,6 +363,12 @@ BIT_AND(phv_data_t *phv, uint8_t *dst, const uint8_t *src1, const uint8_t *src2)
   // FIXME: Currently support only 32-bit fields.
   (*(uint32_t *)dst) = (*(uint32_t *)src1) & (*(uint32_t *)src2);
 }
+
+static inline void
+BIT_OR(phv_data_t *phv, uint8_t *dst, const uint8_t *src1, const uint8_t *src2) {
+  // FIXME: Currently support only 32-bit fields.
+  (*(uint32_t *)dst) = (*(uint32_t *)src1) | (*(uint32_t *)src2);
+}
 /* static inline void */
 /* ADD_TO_FIELD_generic_uint32 (rmt_field_instance_t dst, uint32_t *src_ptr, int src_bit_width) { */
 /*     // TODO: test well */
