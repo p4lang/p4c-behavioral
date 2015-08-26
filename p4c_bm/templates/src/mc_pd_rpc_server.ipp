@@ -43,7 +43,7 @@ public:
     return grp_hdl;
   }
 
-  int32_t mc_mgrp_destroy(const SessionHandle_t sess_hdl, const McHandle_t grp_hdl){
+  int32_t mc_mgrp_destroy(const SessionHandle_t sess_hdl, const int dev, const McHandle_t grp_hdl){
     return ::mc_mgrp_destroy(sess_hdl, grp_hdl);
   }
 
@@ -53,19 +53,19 @@ public:
     return l1_hdl;
   }
 
-  McHandle_t mc_node_update(const SessionHandle_t sess_hdl, const McHandle_t node_hdl, const std::string &port_map, const std::string &lag_map){
+  McHandle_t mc_node_update(const SessionHandle_t sess_hdl, const int dev,  const McHandle_t node_hdl, const std::string &port_map, const std::string &lag_map){
     return ::mc_node_update(sess_hdl, node_hdl, (uint8_t*)port_map.c_str(), (uint8_t*)lag_map.c_str());
   }
 
-  int32_t mc_node_destroy(const SessionHandle_t sess_hdl, const McHandle_t node_hdl){
+  int32_t mc_node_destroy(const SessionHandle_t sess_hdl, const int dev, const McHandle_t node_hdl){
     return ::mc_node_destroy(sess_hdl, node_hdl);
   }
 
-  int32_t mc_associate_node(const SessionHandle_t sess_hdl, const McHandle_t grp_hdl, const McHandle_t l1_hdl){
+  int32_t mc_associate_node(const SessionHandle_t sess_hdl, const int dev, const McHandle_t grp_hdl, const McHandle_t l1_hdl){
     return ::mc_associate_node(sess_hdl, grp_hdl, l1_hdl);
   }
 
-  int32_t mc_dissociate_node(const SessionHandle_t sess_hdl, const McHandle_t grp_hdl, const McHandle_t l1_hdl){
+  int32_t mc_dissociate_node(const SessionHandle_t sess_hdl, const int dev, const McHandle_t grp_hdl, const McHandle_t l1_hdl){
     return ::mc_dissociate_node(sess_hdl, grp_hdl, l1_hdl);
   }
 
