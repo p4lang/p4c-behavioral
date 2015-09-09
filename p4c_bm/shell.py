@@ -57,7 +57,8 @@ def get_parser():
     parser.add_argument('--plugin', dest='plugin_list', action="append",
                         default = [],
                         help="list of plugins to generate templates")
-
+    parser.add_argument('--openflow-mapping-dir', help="Directory of openflow mapping files")
+    parser.add_argument('--openflow-mapping-mod', help="Openflow mapping module name -- not a file name")
     return parser
 
 def _get_p4_basename(p4_source):
@@ -129,6 +130,11 @@ def main():
                                            args.meta_config,
                                            args.public_inc_path,
                                            dump_yaml = args.dump_yaml)
+
+    if args.openflow_mapping_dir and args.openflow_mapping_mod:
+        sys.path.append(args.openflow_mapping_dir)
+        render_dict['openflow_mapping_mod'] = args.openflow_mapping_mod
+
     smart.render_all_files(render_dict, gen_dir,
                            with_thrift = args.thrift,
                            with_plugin_list = args.plugin_list)
