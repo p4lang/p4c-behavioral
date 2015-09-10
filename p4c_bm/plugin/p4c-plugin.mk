@@ -7,5 +7,4 @@ endif
 
 ifdef PLUGIN_OPENFLOW
 include ${P4FACTORY}/submodules/p4c-behavioral/p4c_bm/plugin/openflow-plugin.mk
-BM_PARAMS += -DOPENFLOW_ENABLE
 endif
