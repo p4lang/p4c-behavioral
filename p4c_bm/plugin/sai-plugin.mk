@@ -36,4 +36,4 @@ ${BM_SAI_OBJS_CPP} : ${BM_OBJ_DIR}/%.o : ${BM_BUILD_PLUGIN_SRC_DIR}/%.cpp ${BM_T
 $(LIB_DIR)/plugin-sai.a: ${BM_PLUGIN_THRIFT_OUTPUT_CPP} ${BM_BUILD_PLUGIN_SRC_DIR}/p4_sai_rpc_types.h ${BM_SAI_OBJS_C} ${BM_SAI_OBJS_CPP} 
 	ar -rc $@ $^
 
-
+.NOTPARALLEL:

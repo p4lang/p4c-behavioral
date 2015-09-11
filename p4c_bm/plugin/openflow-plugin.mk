@@ -21,3 +21,4 @@ PLUGIN_LIBS += plugin-openflow.a
 $(LIB_DIR)/plugin-openflow.a: ${BM_OF_OBJS_C} ${BM_TENJIN_TARGET}
 	ar -rc $@ $^
 
+.NOTPARALLEL:
