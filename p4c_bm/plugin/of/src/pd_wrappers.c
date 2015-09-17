@@ -126,7 +126,7 @@ ${name}
         JLG (pv, *action_args, OFPAT_OUTPUT);
         if (*(uint32_t *) *pv == OFPP_CONTROLLER) {
             ${p4_pd_prefix + "openflow_miss_action_spec_t miss_spec"};
-//            miss_spec.action_table_id = ${map_mod.openflow_tables[table].id};
+            miss_spec.action_table_id = ${map_mod.openflow_tables[table].id};
             miss_spec.action_reason = OFPR_ACTION;
             *signal = 1;
 
@@ -182,7 +182,7 @@ ${name}
         JLG (pv, *action_args, OFPAT_OUTPUT);
         if (*(uint32_t *) *pv == OFPP_CONTROLLER) {
             ${p4_pd_prefix + "openflow_miss_action_spec_t miss_spec"};
-//            miss_spec.action_table_id = ${map_mod.openflow_tables[table].id};
+            miss_spec.action_table_id = ${map_mod.openflow_tables[table].id};
             miss_spec.action_reason = OFPR_ACTION;
             *signal = 1;
 
@@ -239,7 +239,7 @@ ${name}
         JLG (pv, *action_args, OFPAT_OUTPUT);
         if (*(uint32_t *) *pv == OFPP_CONTROLLER) {
             ${p4_pd_prefix + "openflow_miss_action_spec_t miss_spec"};
-//            miss_spec.action_table_id = ${map_mod.openflow_tables[table].id};
+            miss_spec.action_table_id = ${map_mod.openflow_tables[table].id};
             miss_spec.action_reason = OFPR_ACTION;
             *signal = 1;
 
