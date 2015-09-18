@@ -1341,10 +1341,11 @@ tables_${table_name}_set_entry_ttl(const int entry_index, const uint32_t ttl) {
   struct timeval current_time;
   gettimeofday(&current_time, NULL);
   RMT_LOG(P4_LOG_LEVEL_VERBOSE,
-          "Setting TTL %u seconds for entry %d in ${table_name} at %ld.%06ld\n", ttl,
+          "Setting TTL %u ms for entry %d in ${table_name} at %ld.%06ld\n", ttl,
           entry_index, current_time.tv_sec, current_time.tv_usec);
 
-  const struct timeval entry_ttl = {.tv_sec = ttl, .tv_usec= 0};
+  const struct timeval entry_ttl = {.tv_sec = ttl /1000,
+                                    .tv_usec= (ttl % 1000) * 1000};
   entry->ttl = entry_ttl;
   entry->is_hit_after_last_sweep = (sig_atomic_t)0;
   entry->is_reported_hit = (sig_atomic_t)1;

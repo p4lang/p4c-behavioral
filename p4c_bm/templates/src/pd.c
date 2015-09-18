@@ -287,8 +287,8 @@ ${name}
   ${table}_entry_t entry;
 
 //:: if t_info["support_timeout"] is True:
-  entry.ttl.tv_sec = ttl;
-  entry.ttl.tv_usec = 0;
+  entry.ttl.tv_sec = ttl / 1000;
+  entry.ttl.tv_usec = (ttl % 1000) * 1000;
 //:: #endif
 
 //::     action_idx = t_info["actions_idx"][action]
@@ -695,8 +695,8 @@ ${name}
   ${table}_entry_t entry;
 
 //:: if t_info["support_timeout"] is True:
-  entry.ttl.tv_sec = ttl;
-  entry.ttl.tv_usec = 0;
+  entry.ttl.tv_sec = ttl / 1000;
+  entry.ttl.tv_usec = (ttl % 1000) * 1000;
 //:: #endif
 
   p4_pd_act_hdl_t act_hdl = p4_pd_ms_get_mbr_act(&ms_${act_prof}_state,
@@ -754,8 +754,8 @@ ${name}
   ${table}_entry_t entry;
 
 //:: if t_info["support_timeout"] is True:
-  entry.ttl.tv_sec = ttl;
-  entry.ttl.tv_usec = 0;
+  entry.ttl.tv_sec = ttl / 1000;
+  entry.ttl.tv_usec = (ttl % 1000) * 1000;
 //:: #endif
 
   p4_pd_act_hdl_t act_hdl = p4_pd_ms_get_grp_act(&ms_${act_prof}_state,
