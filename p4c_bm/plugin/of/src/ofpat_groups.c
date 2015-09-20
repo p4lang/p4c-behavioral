@@ -113,7 +113,7 @@ ofpat_group_delete (uint32_t group_id, enum ofp_group_type type) {
 
     ofpat_pipeline_key_t key;
     uint16_t i, j, egr_port;
-    for (i = 0, j = 0; i < PORT_MAP_LENGTH; i = (!(i + 1 % 8)) ? j++, 0 : i + 1) {
+    for (i = 0, j = 0; (j * 8 + i) < PORT_MAP_LENGTH; i = !((i + 1) % 8) ? j++, 0 : i + 1) {
         if (*(port_map + j) & (1 << i)) {
             egr_port = j * 8 + i;
             ofpat_pipeline_key_new (NULL, &group_id, &egr_port, &key);
