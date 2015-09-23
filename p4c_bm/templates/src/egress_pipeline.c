@@ -59,6 +59,9 @@ void free_egress_pkt(void* e_pkt) {
 }
 
 int set_drop_tail_thr(const int thr) {
+  if (thr <= 0) {
+    return 0;
+  }
   write_atomic_int(&EGRESS_CB_SIZE, thr);
   RMT_LOG(P4_LOG_LEVEL_INFO, "Set drop tail threshold to %d\n", thr);
   int i = 0;
@@ -69,8 +72,11 @@ int set_drop_tail_thr(const int thr) {
 }
 
 int set_packets_per_sec(const int pps) {
+  if (pps <=0 ) {
+    return 0;
+  }
   write_atomic_int(&USEC_INTERVAL, 1000000.0 / pps);
-  RMT_LOG(P4_LOG_LEVEL_INFO, "Set USEC_INTERVAL to %lu\n", USEC_INTERVAL);
+  RMT_LOG(P4_LOG_LEVEL_INFO, "Set USEC_INTERVAL to %lu\n", read_atomic_int(&USEC_INTERVAL));
   return 0;
 }
 
@@ -273,7 +279,8 @@ int egress_pipeline_receive(int egress,
 
 int egress_pipeline_init(void) {
   egress_pipeline_instances = malloc(NB_THREADS_PER_PIPELINE * sizeof(void *));
-  write_atomic_int(&USEC_INTERVAL, 2400); // roughly 5Mbps with 1.5KB packets
+  write_atomic_int(&USEC_INTERVAL, 0);      // asap
+  //write_atomic_int(&USEC_INTERVAL, 2400); // roughly 5Mbps with 1.5KB packets
   //write_atomic_int(&USEC_INTERVAL, 1200); // roughly 10Mbps with 1.5KB packets
   write_atomic_int(&EGRESS_CB_SIZE, 15);
   int i;

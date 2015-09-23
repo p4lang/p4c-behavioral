@@ -40,7 +40,8 @@ p4_pd_mc_associate_node(p4_pd_sess_hdl_t sess_hdl, int dev, p4_pd_entry_hdl_t gr
                         p4_pd_entry_hdl_t l1_hdl);
 
 p4_pd_status_t
-p4_pd_mc_dissociate_node(p4_pd_sess_hdl_t sess_hdl, int dev, p4_pd_entry_hdl_t grp_hdl,
+p4_pd_mc_dissociate_node(p4_pd_sess_hdl_t sess_hdl, int dev,
+                         p4_pd_entry_hdl_t grp_hdl,
                          p4_pd_entry_hdl_t node_hdl);
 
 p4_pd_status_t
