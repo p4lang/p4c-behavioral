@@ -132,8 +132,8 @@ public:
 //::     #endif
 //::     if has_action_spec:
         ${pd_prefix}${action}_action_spec_t pd_action_spec;
-//::       action_params = gen_action_params(a_info["param_names"],
-//::                                         a_info["param_byte_widths"])
+//::       byte_widths = [(bw + 7) / 8 for bw in a_info["param_bit_widths"]]
+//::       action_params = gen_action_params(a_info["param_names"], byte_widths)
 //::       for name, width in action_params:
 //::         if width <= 4:
         pd_action_spec.${name} = action_spec.${name};
@@ -191,8 +191,8 @@ public:
 
 //::     if has_action_spec:
         ${pd_prefix}${action}_action_spec_t pd_action_spec;
-//::       action_params = gen_action_params(a_info["param_names"],
-//::                                         a_info["param_byte_widths"])
+//::       byte_widths = [(bw + 7) / 8 for bw in a_info["param_bit_widths"]]
+//::       action_params = gen_action_params(a_info["param_names"], byte_widths)
 //::       for name, width in action_params:
 //::         if width <= 4:
         pd_action_spec.${name} = action_spec.${name};
@@ -313,8 +313,8 @@ public:
 
 //::     if has_action_spec:
         ${pd_prefix}${action}_action_spec_t pd_action_spec;
-//::       action_params = gen_action_params(a_info["param_names"],
-//::                                         a_info["param_byte_widths"])
+//::       byte_widths = [(bw + 7) / 8 for bw in a_info["param_bit_widths"]]
+//::       action_params = gen_action_params(a_info["param_names"], byte_widths)
 //::       for name, width in action_params:
 //::         if width <= 4:
         pd_action_spec.${name} = action_spec.${name};
@@ -393,8 +393,8 @@ public:
 
 //::     if has_action_spec:
         ${pd_prefix}${action}_action_spec_t pd_action_spec;
-//::       action_params = gen_action_params(a_info["param_names"],
-//::                                         a_info["param_byte_widths"])
+//::       byte_widths = [(bw + 7) / 8 for bw in a_info["param_bit_widths"]]
+//::       action_params = gen_action_params(a_info["param_names"], byte_widths)
 //::       for name, width in action_params:
 //::         if width <= 4:
         pd_action_spec.${name} = action_spec.${name};
@@ -430,8 +430,8 @@ public:
 
 //::     if has_action_spec:
         ${pd_prefix}${action}_action_spec_t pd_action_spec;
-//::       action_params = gen_action_params(a_info["param_names"],
-//::                                         a_info["param_byte_widths"])
+//::       byte_widths = [(bw + 7) / 8 for bw in a_info["param_bit_widths"]]
+//::       action_params = gen_action_params(a_info["param_names"], byte_widths)
 //::       for name, width in action_params:
 //::         if width <= 4:
         pd_action_spec.${name} = action_spec.${name};

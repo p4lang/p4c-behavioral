@@ -92,8 +92,8 @@ struct ${api_prefix}${table}_match_spec_t {
 //::   if not a_info["param_names"]:
 //::     continue
 //::   #endif
-//::   action_params = gen_action_params(a_info["param_names"],
-//::                                     a_info["param_byte_widths"])
+//::   byte_widths = [(bw + 7) / 8 for bw in a_info["param_bit_widths"]]
+//::   action_params = gen_action_params(a_info["param_names"], byte_widths)
 struct ${api_prefix}${action}_action_spec_t {
 //::   id = 1
 //::   for name, width in action_params:
