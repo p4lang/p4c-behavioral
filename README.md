@@ -4,7 +4,7 @@ p4c-behavioral
 P4 compiler for the behavioral model (BM) target
 
 Pre-requisites:  
-Install p4-hlir (https://github.com/barefootnetworks/p4-hlir)
+Install p4-hlir (https://github.com/p4lang/p4-hlir)
 
 To install:  
 sudo python setup.py install
