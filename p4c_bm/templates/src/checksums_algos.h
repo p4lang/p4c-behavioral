@@ -169,4 +169,12 @@ static inline void crc32(uint8_t *buf, int len, uint8_t *result) {
   *(uint32_t *) result = (reflect(remainder, 32) ^ final_xor_value);
 }
 
+static inline void identity(uint8_t *buf, int len, uint8_t *result) {
+  int byte;
+  int max_len = (len > 4) ? 4 : len;
+  for(byte = 0; byte < max_len; byte++) {
+    result[byte] = buf[byte];
+  }
+}
+
 #endif
