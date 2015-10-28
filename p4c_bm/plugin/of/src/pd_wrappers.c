@@ -277,7 +277,7 @@ openflow_module_init () {
     // packet_out unicast
     ${p4_pd_prefix}packet_out_match_spec_t packet_out_ms;
     packet_out_ms.fabric_header_packetType = 5;
-    packet_out_ms.fabric_header_cpu_reserved = 1;
+    packet_out_ms.fabric_header_cpu_reasonCode = 1;
     status |= ${p4_pd_prefix}packet_out_table_add_with_packet_out_unicast (
         P4_PD_SESSION,
         p4_pd_device,
@@ -288,7 +288,7 @@ openflow_module_init () {
 
     // packet_out multicast
     packet_out_ms.fabric_header_packetType = 5;
-    packet_out_ms.fabric_header_cpu_reserved = 2;
+    packet_out_ms.fabric_header_cpu_reasonCode = 2;
 
     static uint8_t port_list[PRE_PORT_MAP_ARRAY_SIZE];
     static uint8_t lag_map[PRE_PORT_MAP_ARRAY_SIZE];
