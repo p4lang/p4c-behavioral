@@ -167,7 +167,7 @@ void action_${action_name} (phv_data_t *phv, void *action_data) {
 		       ${format_arg(action, args[0])}, ${dst_bytes},
 		       ${format_arg(action, args[1])}, ${src_bytes});
 //::            #endif
-//::        elif call[0] == "ADD":
+//::        elif call[0] in {"ADD", "SUBTRACT", "SHIFT_LEFT", "SHIFT_RIGHT"}:
   {
 //::            dst = args[0][1]
 //::            dst_bytes = field_info[dst]["byte_width_phv"]
@@ -188,10 +188,10 @@ void action_${action_name} (phv_data_t *phv, void *action_data) {
 //::            else:
     const uint8_t *src_ptr2 = ${format_arg(action, args[2])};
 //::            #endif
-    ADD_GENERIC(phv,
-                ${format_arg(action, args[0])}, ${dst_bytes},
-                src_ptr1, ${src_bytes1},
-                src_ptr2, ${src_bytes2});
+    ${call[0]}_GENERIC(phv,
+		       ${format_arg(action, args[0])}, ${dst_bytes},
+		       src_ptr1, ${src_bytes1},
+		       src_ptr2, ${src_bytes2});
   }
 //::        elif call[0] == "SUBTRACT_FROM_FIELD":
 //::            dst = args[0][1]
@@ -239,7 +239,7 @@ void action_${action_name} (phv_data_t *phv, void *action_data) {
 //::                arg_str = format_arg(action, args[1])
 //::            #endif
   ${call[0]}(phv, ${arg_str});
-//::        elif call[0] == "BIT_XOR" or call[0] == "BIT_AND":
+//::        elif call[0] == "BIT_XOR" or call[0] == "BIT_AND" or call[0] == "BIT_OR":
 //::            args_str = ""
 //::            for arg in args:
 //::                arg_str = format_arg(action, arg) + ", "
@@ -264,15 +264,23 @@ void action_${action_name} (phv_data_t *phv, void *action_data) {
   ${call[0]}(phv, bytes_to_uint32(${format_arg(action, args[0])}, ${len_bytes}));
 //::        elif call[0] == "COUNT":
 //::            c_name = args[0][1]
+//::            c2_name = c_name
 //::            c_info = counter_info[c_name]
 //::            index_bytes = arg_byte_width(action, args[1])
-//::            if c_info["type_"] == "packets":
-  stateful_increase_counter(&counter_${c_name},
-			    bytes_to_uint32(${format_arg(action, args[1])}, ${index_bytes}),
+//::            if c_info["type_"] == "packets" or c_info["type_"] == "packets_and_bytes":
+//::              if c_info["type_"] == "packets_and_bytes":
+//::                c2_name = c_name + "_packets"
+//::              #endif
+  stateful_increase_counter(&counter_${c2_name},
+			    bytes_to_uint32(${format_arg_ptr(action, args[1])}, ${index_bytes}),
 			    1);
-//::            else:
-  stateful_increase_counter(&counter_${c_name},
-			    bytes_to_uint32(${format_arg(action, args[1])}, ${index_bytes}),
+//::            #endif
+//::            if c_info["type_"] == "bytes" or c_info["type_"] == "packets_and_bytes":
+//::              if c_info["type_"] == "packets_and_bytes":
+//::                c2_name = c_name + "_bytes"
+//::              #endif
+  stateful_increase_counter(&counter_${c2_name},
+			    bytes_to_uint32(${format_arg_ptr(action, args[1])}, ${index_bytes}),
 			    fields_get_packet_length(phv));
 //::            #endif
 //::        elif call[0] == "EXECUTE_METER":

@@ -28,6 +28,8 @@ limitations under the License.
 
 #include <p4utils/circular_buffer.h>
 
+#define CLONE_SPEC_FOR_DEFLECTED_TAIL_DROPS 0x0000FFFF
+
 typedef struct pipeline_s {
   char *name;
   circular_buffer_t *cb_in;

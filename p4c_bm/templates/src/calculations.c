@@ -63,7 +63,7 @@ static int build_input_${name}(phv_data_t *phv, uint8_t *buffer) {
 //::     elif type_ == "header_ref":
 //::       h_info = header_info[value]
 //::       byte_offset_phv = h_info["byte_offset_phv"]
-//::       width = f_info["bit_width"]
+//::       width = h_info["bit_width"]
   src = get_phv_ptr(phv, ${byte_offset_phv});
   _deparse_${value}(src, dst);
   dst += ${width / 8};
@@ -77,7 +77,7 @@ static int build_input_${name}(phv_data_t *phv, uint8_t *buffer) {
 //::         if not prev_found: continue
 //::         h_info = header_info[header_instance]
 //::         byte_offset_phv = h_info["byte_offset_phv"]
-//::         width = f_info["bit_width"]
+//::         width = h_info["bit_width"]
   if(phv_is_valid_header(phv, RMT_HEADER_INSTANCE_${header_instance})) {
     src = get_phv_ptr(phv, ${byte_offset_phv});
     _deparse_${header_instance}(src, dst);

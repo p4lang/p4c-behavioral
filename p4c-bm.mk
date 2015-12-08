@@ -53,6 +53,9 @@ BM_TEMPLATES_PUBLIC_HEADERS := $(wildcard ${THIS_DIR}/p4c_bm/templates/inc/*.h)
 BM_TEMPLATES_THRIFT := $(wildcard ${THIS_DIR}/p4c_bm/templates/thrift/*.thrift)
 BM_TEMPLATES := ${BM_TEMPLATES_C} ${BM_TEMPLATES_H} ${BM_TEMPLATES_CPP} ${BM_TEMPLATES_PUBLIC_HEADERS} ${BM_TEMPLATES_THRIFT}
 
+# compile the plugins
+include $(THIS_DIR)/p4c_bm/plugin/p4c-plugin.mk
+
 BM_TENJIN_OUTPUT_C := $(addprefix ${BM_BUILD_SRC_DIR}/, $(notdir ${BM_TEMPLATES_C}))
 BM_TENJIN_OUTPUT_H := $(addprefix ${BM_BUILD_DIR}/src/, $(notdir ${BM_TEMPLATES_H}))
 BM_TENJIN_OUTPUT_CPP += $(addprefix ${BM_BUILD_DIR}/src/, $(notdir ${BM_TEMPLATES_CPP}))
@@ -68,6 +71,7 @@ THRIFT_PD_BASENAMES += ${THRIFT_SERVICES}
 
 BM_TENJIN_OUTPUT_THRIFT = $(addprefix ${BM_BUILD_THRIFT_DIR}/, $(addsuffix .thrift, ${THRIFT_FILES}))
 BM_TENJIN_OUTPUT_THRIFT_SERVICES = $(addprefix ${BM_BUILD_THRIFT_DIR}/, $(addsuffix .thrift, ${THRIFT_FILES_WITH_SERVICES}))
+
 
 # Output of Tenjin are the following files:
 # p4c_bm/templates/src/*.c

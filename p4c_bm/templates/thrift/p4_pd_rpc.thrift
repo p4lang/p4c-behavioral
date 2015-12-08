@@ -26,8 +26,13 @@ namespace c_glib p4_pd_rpc
 typedef i32 EntryHandle_t
 typedef i32 MemberHandle_t
 typedef i32 GroupHandle_t
-typedef string MacAddr_t
-typedef string IPv6_t
+typedef binary MacAddr_t
+typedef binary IPv6_t
+
+struct ${api_prefix}counter_value_t {
+  1: required i64 packets;
+  2: required i64 bytes;
+}
 
 
 //:: # match_fields is list of tuples (name, type)
@@ -58,6 +63,10 @@ typedef string IPv6_t
 //::
 //::
 
+struct ${api_prefix}counter_flags_t {
+  1: required bool read_hw_sync;
+}
+
 # Match structs
 
 //:: for table, t_info in table_info.items():
@@ -83,8 +92,8 @@ struct ${api_prefix}${table}_match_spec_t {
 //::   if not a_info["param_names"]:
 //::     continue
 //::   #endif
-//::   action_params = gen_action_params(a_info["param_names"],
-//::                                     a_info["param_byte_widths"])
+//::   byte_widths = [(bw + 7) / 8 for bw in a_info["param_bit_widths"]]
+//::   action_params = gen_action_params(a_info["param_names"], byte_widths)
 struct ${api_prefix}${action}_action_spec_t {
 //::   id = 1
 //::   for name, width in action_params:
@@ -207,7 +216,7 @@ service ${p4_prefix} {
 //::             "EntryHandle_t entry_hdl"]
 //::   param_list = [str(count + 1) + ":" + p for count, p in enumerate(params)]
 //::   param_str = ", ".join(param_list)
-    string ${name}(${param_str});
+    binary ${name}(${param_str});
 //:: #endfor
 
     # Table set default action functions
@@ -392,17 +401,28 @@ service ${p4_prefix} {
 //::   type_ = c_info["type_"]
 //::   if binding[0] == "direct":
 //::     name = "counter_read_" + counter
-    i64 ${name}(1:res.SessionHandle_t sess_hdl, 2:res.DevTarget_t dev_tgt, 3:EntryHandle_t entry);
-
-//::     table = binding[1]
-//::     name = table + "_table_read_" + type_ + "_counter_entry"
-    i64 ${name}(1:res.SessionHandle_t sess_hdl, 2:res.DevTarget_t dev_tgt, 3:EntryHandle_t entry);
+    ${api_prefix}counter_value_t ${name}(1:res.SessionHandle_t sess_hdl,
+    2:res.DevTarget_t dev_tgt, 3:EntryHandle_t entry,
+    4:${api_prefix}counter_flags_t flags);
+//::     name = "counter_write_" + counter
+    i32 ${name}(1:res.SessionHandle_t sess_hdl, 2:res.DevTarget_t dev_tgt,
+    3:EntryHandle_t entry, 4:${api_prefix}counter_value_t counter_value);
 
 //::   else:
 //::     name = "counter_read_" + counter
-    i64 ${name}(1:res.SessionHandle_t sess_hdl, 2:res.DevTarget_t dev_tgt, 3:i32 index);
+    ${api_prefix}counter_value_t ${name}(1:res.SessionHandle_t sess_hdl,
+    2:res.DevTarget_t dev_tgt, 3:i32 index, 4:${api_prefix}counter_flags_t
+    flags);
+//::     name = "counter_write_" + counter
+    i32 ${name}(1:res.SessionHandle_t sess_hdl, 2:res.DevTarget_t dev_tgt, 3:i32
+    index, 4:${api_prefix}counter_value_t counter_value);
 
 //::   #endif
+//:: #endfor
+
+//:: for counter, c_info in counter_info.items():
+//::   name = "counter_hw_sync_" + counter
+    i32 ${name}(1:res.SessionHandle_t sess_hdl, 2:res.DevTarget_t dev_tgt);
 //:: #endfor
 
     # global table counters

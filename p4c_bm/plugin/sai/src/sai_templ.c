@@ -229,11 +229,7 @@ void p4_sai_entry_to_${table}_match_spec(
 //::     #endif
 //::     params += ["&entry_hdl"]
 //::     param_str = ",\n     ".join(params)
-//::     if act_prof_name is not None:
-//::        del_name = p4_pd_prefix + parent_table + "_table_delete"
-//::     else:
-//::        del_name = p4_pd_prefix + table + "_table_delete"
-//::     #endif
+//::     del_name = p4_pd_prefix + table + "_table_delete"
 //::     mod_params = ["sess_hdl", "dev_id"]
 //::     del_params = ["sess_hdl", 
 //::               "dev_id"] 
@@ -271,7 +267,6 @@ p4_pd_status_t  p4_sai_attribute_to_${table}_action_spec_${action}(p4_table_opco
 {
     p4_pd_status_t status=0; 
     unsigned int i=0;
-    p4_pd_entry_hdl_t entry_hdl;
     ${p4_pd_prefix}${action}_action_spec_t action_spec;
 
     memset(&action_spec, 0, sizeof(action_spec));
@@ -301,6 +296,7 @@ p4_pd_status_t  p4_sai_attribute_to_${table}_action_spec_${action}(p4_table_opco
     switch(op_code) {
         case ADD:
             {
+                p4_pd_entry_hdl_t entry_hdl;
                 status = ${add_name} (
                         ${param_str} 
                         ); 
@@ -320,13 +316,14 @@ p4_pd_status_t  p4_sai_attribute_to_${table}_action_spec_${action}(p4_table_opco
             break;
         case MOD:
             {
+                /*
+                p4_pd_entry_hdl_t entry_hdl;
 //::            if has_match_spec:
                 entry_hdl = _get_entry_index(0, match_spec, sizeof(sai_${table}_entry_t));
 //                SAI_LOG(" mod hdl 0x%0x\n", entry_hdl);
 //::            else:
                 entry_hdl = 0; // always 0 as there is only one record in table
 //::            #endif
-                /*
                 status = ${mod_name} (
                          ${mod_param_str}, entry_hdl
 //::     if has_action_spec:
@@ -338,6 +335,7 @@ p4_pd_status_t  p4_sai_attribute_to_${table}_action_spec_${action}(p4_table_opco
             break;
             case DEL:
             {
+                p4_pd_entry_hdl_t entry_hdl;
 //::            if has_match_spec:
                 entry_hdl = _get_entry_index(0, match_spec, sizeof(sai_${table}_entry_t));
 //                SAI_LOG(" del hdl 0x%0x\n", entry_hdl);
@@ -391,6 +389,7 @@ p4_pd_status_t  p4_sai_attribute_to_${table}_action_spec(p4_table_opcode_t op_co
 
 //::   #endif
 
+//::   if act_prof_name is None:
 sai_status_t sai_create_${table}(
 //::     if has_match_spec:
     _In_ const sai_${table}_entry_t* ${table}_entry,
@@ -438,6 +437,8 @@ sai_status_t sai_remove_${table}(
     }
     return status;
 }
+
+//::   #endif
 
 
 sai_status_t sai_set_${table}_attribute(
@@ -539,8 +540,10 @@ sai_status_t sai_get_${table}_stats (
 //::   #endif
 
 sai_${table}_api_t ${table}_api = {
+//::   if act_prof_name is None:
     .create_${table} = sai_create_${table},
     .remove_${table} = sai_remove_${table},
+//::   #endif
     .set_${table}_attribute = sai_set_${table}_attribute,
     .get_${table}_attribute = sai_get_${table}_attribute,
 //::   if act_prof_name is not None:

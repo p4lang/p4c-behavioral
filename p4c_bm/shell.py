@@ -20,6 +20,9 @@ import sys
 from p4_hlir.main import HLIR
 import smart
 import shutil
+from pkg_resources import resource_string
+import json
+
 
 def get_parser():
     parser = argparse.ArgumentParser(description='p4c-behavioral arguments')
@@ -54,7 +57,8 @@ def get_parser():
     parser.add_argument('--plugin', dest='plugin_list', action="append",
                         default = [],
                         help="list of plugins to generate templates")
-
+    parser.add_argument('--openflow-mapping-dir', help="Directory of openflow mapping files")
+    parser.add_argument('--openflow-mapping-mod', help="Openflow mapping module name -- not a file name")
     return parser
 
 def _get_p4_basename(p4_source):
@@ -111,6 +115,10 @@ def main():
     h.add_preprocessor_args("-D__TARGET_BM__")
     for parg in preprocessor_args:
         h.add_preprocessor_args(parg)
+    # in addition to standard P4 primitives
+    more_primitives = json.loads(resource_string(__name__, 'primitives.json'))
+    h.add_primitives(more_primitives)
+
     if not h.build():
         print "Error while building HLIR"
         sys.exit(1)
@@ -122,6 +130,11 @@ def main():
                                            args.meta_config,
                                            args.public_inc_path,
                                            dump_yaml = args.dump_yaml)
+
+    if args.openflow_mapping_dir and args.openflow_mapping_mod:
+        sys.path.append(args.openflow_mapping_dir)
+        render_dict['openflow_mapping_mod'] = args.openflow_mapping_mod
+
     smart.render_all_files(render_dict, gen_dir,
                            with_thrift = args.thrift,
                            with_plugin_list = args.plugin_list)

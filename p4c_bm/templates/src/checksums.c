@@ -105,21 +105,22 @@ static void update_${field}_${idx}(phv_data_t *phv) {
 //::   #endfor
 
 int verify_checksums(phv_data_t *phv) {
+  int ret = 1;
 //:: for field, verifies in calculated_fields_verify.items():
 //::   for idx, verify in enumerate(verifies):
 //::     _, if_cond_idx = verify
 //::     if if_cond_idx:
   if(check_condition_${if_cond_idx}(phv)) {
-    return verify_${field}_${idx}(phv);
+    ret &= verify_${field}_${idx}(phv);
   }
 //::     else:
-  return verify_${field}_${idx}(phv);
+  ret &= verify_${field}_${idx}(phv);
 //::       break
 //::     #endif
 
 //::   #endfor
 //:: #endfor
-  return 1;
+  return ret;
 }
 
 void update_checksums(phv_data_t *phv) {
@@ -129,7 +130,6 @@ void update_checksums(phv_data_t *phv) {
 //::     if if_cond_idx:
   if(check_condition_${if_cond_idx}(phv)) {
     update_${field}_${idx}(phv);
-    return;
   }
 //::     else:
   update_${field}_${idx}(phv);

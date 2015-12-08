@@ -9,12 +9,22 @@
 	    "instance_type" : "standard_metadata_instance_type"
 	},
 	"intrinsic_metadata" : {
+            "ingress_global_timestamp": "intrinsic_metadata_ingress_global_tstamp",
+            "enq_qdepth": "intrinsic_metadata_enq_qdepth",
+            "enq_timestamp": "intrinsic_metadata_enq_tstamp",
+            "enq_congest_stat": "intrinsic_metadata_enq_congest_stat",
+            "deq_qdepth": "intrinsic_metadata_deq_qdepth",
+            "deq_timedelta": "intrinsic_metadata_deq_timedelta",
+            "deq_congest_stat": "intrinsic_metadata_deq_congest_stat",
+            "deflect_on_drop": "intrinsic_metadata_deflect_on_drop",
+            "deflection_flag": "intrinsic_metadata_deflection_flag",
             "lf_field_list": "intrinsic_metadata_lf_field_list"
 	},
 	"pre_metadata" : {
-            "eg_mcast_group": "intrinsic_metadata_eg_mcast_group",
-            "replication_id": "intrinsic_metadata_replication_id"
-	}
+            "eg_mcast_group": "intrinsic_metadata_mcast_grp",
+            "replication_id": "intrinsic_metadata_egress_rid",
+            "lag_hash": "intrinsic_metadata_mcast_hash"
+    }
     },
     "meta_carry" : [
 	"standard_metadata"

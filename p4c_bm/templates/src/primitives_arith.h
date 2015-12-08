@@ -69,6 +69,36 @@ _ADD_UINT32(uint8_t *dst_ptr,
 }
 
 static inline void
+_SUBTRACT_UINT32(uint8_t *dst_ptr,
+		 const uint8_t *src_ptr1, const int src_len1,
+		 const uint8_t *src_ptr2, const int src_len2) {
+  *(uint32_t *) dst_ptr = htonl(ntohl(*(const uint32_t *)
+				      (src_ptr1 + src_len1 - sizeof(const uint32_t))) -
+				ntohl(*(const uint32_t *)
+                                      (src_ptr2 + src_len2 - sizeof(const uint32_t))));
+}
+
+static inline void
+_SHIFT_LEFT_UINT32(uint8_t *dst_ptr,
+		   const uint8_t *src_ptr1, const int src_len1,
+		   const uint8_t *src_ptr2, const int src_len2) {
+  *(uint32_t *) dst_ptr = htonl(ntohl(*(const uint32_t *)
+				      (src_ptr1 + src_len1 - sizeof(const uint32_t))) <<
+				ntohl(*(const uint32_t *)
+                                      (src_ptr2 + src_len2 - sizeof(const uint32_t))));
+}
+
+static inline void
+_SHIFT_RIGHT_UINT32(uint8_t *dst_ptr,
+		    const uint8_t *src_ptr1, const int src_len1,
+		    const uint8_t *src_ptr2, const int src_len2) {
+  *(uint32_t *) dst_ptr = htonl(ntohl(*(const uint32_t *)
+				      (src_ptr1 + src_len1 - sizeof(const uint32_t))) >>
+				ntohl(*(const uint32_t *)
+                                      (src_ptr2 + src_len2 - sizeof(const uint32_t))));
+}
+
+static inline void
 _SUBTRACT_FROM_FIELD_UINT32(uint8_t *dst_ptr,
                             uint8_t *src_ptr, int src_len) {
   *(uint32_t *) dst_ptr = htonl(ntohl(*(uint32_t *) dst_ptr) - ntohl(*(uint32_t *)

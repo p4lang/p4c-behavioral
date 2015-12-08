@@ -25,6 +25,7 @@ int deparser_produce_pkt(phv_data_t *phv, uint8_t **pkt, int *len);
 
 int deparser_produce_metadata(phv_data_t *phv, uint8_t **metadata);
 
+void deparser_extract_digest(phv_data_t *phv, int *metadata_recirc, uint8_t *buffer, uint16_t *length);
 
 // |bit_offset| is offset of the first bit in dst[0] that will be modified. The
 // offset is from the MSB-side which means the first |bit_offset| MSBs in

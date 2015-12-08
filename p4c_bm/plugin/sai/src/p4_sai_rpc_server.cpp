@@ -2,6 +2,7 @@
 // You should copy it to another filename to avoid overwriting it.
 
 #include <string.h>
+#include <iostream>
 
 #include "sai_p4_sai.h"
 #include <p4_sim/p4_sai_rpc_server.h>

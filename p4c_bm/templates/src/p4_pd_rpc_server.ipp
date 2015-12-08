@@ -12,6 +12,8 @@ extern "C" {
 #include <p4_sim/pd_static.h>
 #include <p4_sim/pd.h>
 #include <p4_sim/mirroring.h>
+#include <p4_sim/pg.h>
+#include <p4_sim/traffic_manager.h>
 #include <p4utils/circular_buffer.h>
 }
 
@@ -130,8 +132,8 @@ public:
 //::     #endif
 //::     if has_action_spec:
         ${pd_prefix}${action}_action_spec_t pd_action_spec;
-//::       action_params = gen_action_params(a_info["param_names"],
-//::                                         a_info["param_byte_widths"])
+//::       byte_widths = [(bw + 7) / 8 for bw in a_info["param_bit_widths"]]
+//::       action_params = gen_action_params(a_info["param_names"], byte_widths)
 //::       for name, width in action_params:
 //::         if width <= 4:
         pd_action_spec.${name} = action_spec.${name};
@@ -189,8 +191,8 @@ public:
 
 //::     if has_action_spec:
         ${pd_prefix}${action}_action_spec_t pd_action_spec;
-//::       action_params = gen_action_params(a_info["param_names"],
-//::                                         a_info["param_byte_widths"])
+//::       byte_widths = [(bw + 7) / 8 for bw in a_info["param_bit_widths"]]
+//::       action_params = gen_action_params(a_info["param_names"], byte_widths)
 //::       for name, width in action_params:
 //::         if width <= 4:
         pd_action_spec.${name} = action_spec.${name};
@@ -311,8 +313,8 @@ public:
 
 //::     if has_action_spec:
         ${pd_prefix}${action}_action_spec_t pd_action_spec;
-//::       action_params = gen_action_params(a_info["param_names"],
-//::                                         a_info["param_byte_widths"])
+//::       byte_widths = [(bw + 7) / 8 for bw in a_info["param_bit_widths"]]
+//::       action_params = gen_action_params(a_info["param_names"], byte_widths)
 //::       for name, width in action_params:
 //::         if width <= 4:
         pd_action_spec.${name} = action_spec.${name};
@@ -391,8 +393,8 @@ public:
 
 //::     if has_action_spec:
         ${pd_prefix}${action}_action_spec_t pd_action_spec;
-//::       action_params = gen_action_params(a_info["param_names"],
-//::                                         a_info["param_byte_widths"])
+//::       byte_widths = [(bw + 7) / 8 for bw in a_info["param_bit_widths"]]
+//::       action_params = gen_action_params(a_info["param_names"], byte_widths)
 //::       for name, width in action_params:
 //::         if width <= 4:
         pd_action_spec.${name} = action_spec.${name};
@@ -428,8 +430,8 @@ public:
 
 //::     if has_action_spec:
         ${pd_prefix}${action}_action_spec_t pd_action_spec;
-//::       action_params = gen_action_params(a_info["param_names"],
-//::                                         a_info["param_byte_widths"])
+//::       byte_widths = [(bw + 7) / 8 for bw in a_info["param_bit_widths"]]
+//::       action_params = gen_action_params(a_info["param_names"], byte_widths)
 //::       for name, width in action_params:
 //::         if width <= 4:
         pd_action_spec.${name} = action_spec.${name};
@@ -691,54 +693,89 @@ public:
     }
 //:: #endfor
 
-
-
-  // COUNTERS
+    // COUNTERS
 //:: for counter, c_info in counter_info.items():
 //::   binding = c_info["binding"]
 //::   type_ = c_info["type_"]
 //::   if binding[0] == "direct":
 //::     name = "counter_read_" + counter
 //::     pd_name = pd_prefix + name
-  int64_t ${name}(const SessionHandle_t sess_hdl, const DevTarget_t &dev_tgt, const EntryHandle_t entry) {
+    void ${name}(${api_prefix}counter_value_t &counter_value, const SessionHandle_t sess_hdl, const DevTarget_t &dev_tgt, const EntryHandle_t entry, const ${api_prefix}counter_flags_t &flags) {
       std::cerr << "In ${name}\n";
 
       p4_pd_dev_target_t pd_dev_tgt;
       pd_dev_tgt.device_id = dev_tgt.dev_id;
       pd_dev_tgt.dev_pipe_id = dev_tgt.dev_pipe_id;
 
-      return ${pd_name}(sess_hdl, pd_dev_tgt, entry);
-  }
+      int pd_flags = 0;
+      if(flags.read_hw_sync) pd_flags |= COUNTER_READ_HW_SYNC;
 
-//::     table = binding[1]
-//::     name = table + "_table_read_" + type_ + "_counter_entry"
+      p4_pd_counter_value_t value = ${pd_name}(sess_hdl, pd_dev_tgt, entry, pd_flags);
+      counter_value.packets = value.packets;
+      counter_value.bytes = value.bytes;
+    }
+
+//::     name = "counter_write_" + counter
 //::     pd_name = pd_prefix + name
-  int64_t ${name}(const SessionHandle_t sess_hdl, const DevTarget_t &dev_tgt, const EntryHandle_t entry) {
+    int32_t ${name}(const SessionHandle_t sess_hdl, const DevTarget_t &dev_tgt, const EntryHandle_t entry, const ${api_prefix}counter_value_t &counter_value) {
       std::cerr << "In ${name}\n";
 
       p4_pd_dev_target_t pd_dev_tgt;
       pd_dev_tgt.device_id = dev_tgt.dev_id;
       pd_dev_tgt.dev_pipe_id = dev_tgt.dev_pipe_id;
 
-      return ${pd_name}(sess_hdl, pd_dev_tgt, entry);
-  }
+      p4_pd_counter_value_t value;
+      value.packets = counter_value.packets;
+      value.bytes = counter_value.bytes;
+
+      return ${pd_name}(sess_hdl, pd_dev_tgt, entry, value);
+    }
 
 //::   else:
 //::     name = "counter_read_" + counter
 //::     pd_name = pd_prefix + name
-  int64_t ${name}(const SessionHandle_t sess_hdl, const DevTarget_t &dev_tgt, const int32_t index) {
+    void ${name}(${api_prefix}counter_value_t &counter_value, const SessionHandle_t sess_hdl, const DevTarget_t &dev_tgt, const int32_t index, const ${api_prefix}counter_flags_t &flags) {
       std::cerr << "In ${name}\n";
 
       p4_pd_dev_target_t pd_dev_tgt;
       pd_dev_tgt.device_id = dev_tgt.dev_id;
       pd_dev_tgt.dev_pipe_id = dev_tgt.dev_pipe_id;
 
-      return ${pd_name}(sess_hdl, pd_dev_tgt, index);
-  }
+      int pd_flags = 0;
+      if(flags.read_hw_sync) pd_flags |= COUNTER_READ_HW_SYNC;
+
+      p4_pd_counter_value_t value = ${pd_name}(sess_hdl, pd_dev_tgt, index, pd_flags);
+      counter_value.packets = value.packets;
+      counter_value.bytes = value.bytes;
+    }
+
+//::     name = "counter_write_" + counter
+//::     pd_name = pd_prefix + name
+    int32_t ${name}(const SessionHandle_t sess_hdl, const DevTarget_t &dev_tgt, const int32_t index, const ${api_prefix}counter_value_t &counter_value) {
+      std::cerr << "In ${name}\n";
+
+      p4_pd_dev_target_t pd_dev_tgt;
+      pd_dev_tgt.device_id = dev_tgt.dev_id;
+      pd_dev_tgt.dev_pipe_id = dev_tgt.dev_pipe_id;
+
+      p4_pd_counter_value_t value;
+      value.packets = counter_value.packets;
+      value.bytes = counter_value.bytes;
+
+      return ${pd_name}(sess_hdl, pd_dev_tgt, index, value);
+    }
 
 //::   #endif
 //:: #endfor
 
+//:: for counter, c_info in counter_info.items():
+//::   name = "counter_hw_sync_" + counter
+//::   pd_name = pd_prefix + name
+    int32_t ${name}(const SessionHandle_t sess_hdl, const DevTarget_t &dev_tgt) {
+      return 0;
+    }
+
+//:: #endfor
 
   // GLOBAL TABLE COUNTERS
 
@@ -852,10 +889,44 @@ public:
       return ${pd_prefix}${name}(mirror_id);
   }
 
+//:: name = "set_drop_tail_thr"
+  int32_t ${name}(const int32_t drop_tail_size) {
+      std::cerr << "In ${name}\n";
+      return ::${name}(drop_tail_size);
+  }
+
+//:: name = "set_packets_per_sec"
+  int32_t ${name}(const int32_t pps) {
+      std::cerr << "In ${name}\n";
+      return ::${name}(pps);
+  }
+
 //:: name = "mirroring_mapping_get_egress_port"
   int32_t ${name}(int32_t mirror_id) {
       std::cerr << "In ${name}\n";
-      return ${name}(mirror_id);
+      return ${pd_prefix}${name}(mirror_id);
+  }
+
+  // coalescing api
+
+//:: name = "mirroring_set_coalescing_sessions_offset"
+  int32_t ${name}(const int16_t coalescing_sessions_offset) {
+      std::cerr << "In ${name}\n";
+      return ${pd_prefix}${name}(coalescing_sessions_offset);
+  }
+
+//:: name = "mirroring_add_coalescing_session"
+  int32_t ${name}(const int32_t mirror_id, const int32_t egress_port, const std::vector<int8_t> &header, const int16_t min_pkt_size, const int8_t timeout){
+      std::cerr << "In ${name}\n";
+      return ${pd_prefix}${name}(mirror_id, egress_port, &header[0], (const int8_t)header.size(), min_pkt_size, timeout);
+  }
+
+  void pg_start(const int32_t id, const std::vector<int8_t> &pg_header, const int32_t interval_ms) {
+    ${pd_prefix}pg_start(id, &pg_header[0], pg_header.size(), interval_ms);
+  }
+
+  void pg_stop(const int32_t id) {
+    ${pd_prefix}pg_stop(id);
   }
 
   void set_learning_timeout(const SessionHandle_t sess_hdl, const int8_t dev_id, const int32_t msecs) {

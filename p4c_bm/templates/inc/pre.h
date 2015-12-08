@@ -22,52 +22,71 @@ limitations under the License.
 #include <p4_sim/pd.h>
 
 #define PRE_MGID_MAX 16384
-#define PRE_PORTS_MAX 288
+#define PRE_PORTS_MAX 256
 #define PRE_L1_NODE_MAX 16384
 #define PRE_L2_NODE_MAX 4096
+#define PRE_LAG_MAX 256
 
 typedef uint16_t mgrp_id_t;
 typedef uint16_t mgrp_rid_t;
-typedef uint16_t mgrp_yid_t;
 typedef uint16_t mgrp_lag_id_t;
 typedef uint16_t mgrp_port_id_t;
 
 typedef uint32_t mc_mgrp_hdl_t;
-typedef uint32_t mc_l1_node_hdl_t;
-typedef uint32_t mc_l2_node_hdl_t;
+typedef uint32_t mc_node_hdl_t;
 
-p4_pd_status_t mc_create_session(p4_pd_sess_hdl_t *sess_hdl);
-p4_pd_status_t mc_delete_session(p4_pd_sess_hdl_t sess_hdl);
-p4_pd_status_t mc_mgrp_create(p4_pd_sess_hdl_t session,
-                           int8_t device,
-                           mgrp_id_t mgid,
-                           mc_mgrp_hdl_t *mgrp_hdl);
+p4_pd_status_t
+mc_create_session(p4_pd_sess_hdl_t *sess_hdl);
 
-p4_pd_status_t mc_mgrp_destroy(p4_pd_sess_hdl_t session,
-                            mc_mgrp_hdl_t mgrp_hdl);
+p4_pd_status_t
+mc_destroy_session(p4_pd_sess_hdl_t sess_hdl);
 
-p4_pd_status_t mc_l1_node_create(p4_pd_sess_hdl_t session,
-                              mgrp_rid_t rid,
-                              mc_l1_node_hdl_t *l1_hdl);
+p4_pd_status_t
+mc_mgrp_create(p4_pd_sess_hdl_t session,
+               int8_t device,
+               mgrp_id_t mgid,
+               mc_mgrp_hdl_t *mgrp_hdl);
 
-p4_pd_status_t mc_l1_associate_node(p4_pd_sess_hdl_t session,
-                                 mc_mgrp_hdl_t mgrp_hdl,
-                                 mc_l1_node_hdl_t l1_hdl);
+p4_pd_status_t
+mc_mgrp_destroy(p4_pd_sess_hdl_t session,
+                mc_mgrp_hdl_t mgrp_hdl);
 
-p4_pd_status_t mc_l1_node_destroy(p4_pd_sess_hdl_t session,
-                               mc_l1_node_hdl_t l1_hdl);
+p4_pd_status_t
+mc_node_create(p4_pd_sess_hdl_t session,
+               int8_t device,
+               mgrp_rid_t rid,
+               const uint8_t *port_map,
+               const uint8_t *lag_map,
+               mc_node_hdl_t *node_hdl);
 
-p4_pd_status_t mc_l2_node_create(p4_pd_sess_hdl_t session,
-                                   mc_l1_node_hdl_t l1_hdl,
-                                   const uint8_t *port_map,
-                                   mc_l2_node_hdl_t *l2_hdl);
+p4_pd_status_t
+mc_node_destroy(p4_pd_sess_hdl_t session,
+                mc_node_hdl_t node_hdl);
 
-p4_pd_status_t mc_l2_node_destroy(p4_pd_sess_hdl_t session,
-                               mc_l2_node_hdl_t l2_hdl);
+p4_pd_status_t
+mc_node_update(p4_pd_sess_hdl_t session,
+               mc_node_hdl_t node_hdl,
+               const uint8_t *port_map,
+               const uint8_t *lag_map);
 
-p4_pd_status_t mc_l2_node_update(p4_pd_sess_hdl_t session,
-                              mc_l2_node_hdl_t l2_hdl,
-                              const uint8_t *port_map);
- 
+p4_pd_status_t
+mc_associate_node(p4_pd_sess_hdl_t session,
+                  mc_mgrp_hdl_t mgrp_hdl,
+                  mc_node_hdl_t node_hdl);
+
+p4_pd_status_t
+mc_dissociate_node(p4_pd_sess_hdl_t session,
+                  mc_mgrp_hdl_t mgrp_hdl,
+                  mc_node_hdl_t node_hdl);
+
+p4_pd_status_t
+mc_set_lag_membership(p4_pd_sess_hdl_t session,
+                      int8_t dev_id,
+                      mgrp_lag_id_t lag_id,
+                      const uint8_t *port_map);
+
+p4_pd_status_t
+mc_complete_operations(p4_pd_sess_hdl_t shdl);
+
 //:: #endif
 #endif /* _RMT_PRE_H */

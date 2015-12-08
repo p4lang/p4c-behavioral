@@ -79,6 +79,12 @@ static void *processing_loop_ingress(void *arg) {
     /* set standard metadata */
     set_standard_metadata(pipeline, i_pkt);
 
+
+//::  if enable_intrinsic:
+  /* Set ingress timestamp */
+    fields_set_ingress_global_timestamp(pipeline->phv, get_timestamp());
+//::  #endif 
+
     ApplyTableFn table_entry_fn = parser_parse_pkt(pipeline->phv,
 						   b_pkt->pkt_data, b_pkt->pkt_len,
 						   pipeline->parse_state_start);
@@ -118,6 +124,26 @@ static void *processing_loop_ingress(void *arg) {
     uint8_t *metadata;
     uint8_t *pkt_data;
     int pkt_len;
+
+//:: if "copy_to_cpu" in extra_metadata_name_map:
+#define CPU_PORT 64 // TODO: improve
+    // program supports copy to cpu
+    if(fields_get_copy_to_cpu(pipeline->phv)) {
+      pipeline->deparse_fn(pipeline->phv, &pkt_data, &pkt_len);
+      deparser_produce_metadata(pipeline->phv, &metadata);
+//::   if enable_pre:
+      metadata_set_eg_mcast_group(metadata, 0);
+//::   #endif
+      metadata_set_egress_spec(metadata, CPU_PORT);
+      queuing_receive(metadata,
+		      metadata_recirc_digest(pipeline->phv->metadata_recirc),
+		      pkt_data, pkt_len, i_pkt->pkt.pkt_id,
+		      PKT_INSTANCE_TYPE_INGRESS_CLONE);
+      fields_set_copy_to_cpu(pipeline->phv, 0);
+    }
+//:: #endif
+
+
     pipeline->deparse_fn(pipeline->phv, &pkt_data, &pkt_len);
     deparser_produce_metadata(pipeline->phv, &metadata);
 

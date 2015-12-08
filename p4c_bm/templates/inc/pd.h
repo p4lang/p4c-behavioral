@@ -94,8 +94,8 @@ typedef struct ${p4_pd_prefix}${table}_match_spec {
 
 //::     continue
 //::   #endif
-//::   action_params = gen_action_params(a_info["param_names"],
-//::                                     a_info["param_byte_widths"])
+//::   byte_widths = [(bw + 7) / 8 for bw in a_info["param_bit_widths"]]
+//::   action_params = gen_action_params(a_info["param_names"], byte_widths)
 typedef struct ${p4_pd_prefix}${action}_action_spec {
 //::   for name, width in action_params:
 //::     if width > 4:
@@ -493,7 +493,6 @@ ${name}
 
 /* END OF INDIRECT */
 
-
 /* COUNTERS */
 
 //:: for counter, c_info in counter_info.items():
@@ -506,29 +505,32 @@ ${name}
  * @param sess_hdl
  * @param dev_tgt
  * @param entry_hdl
+ * @param flags
 */
-uint64_t
+p4_pd_counter_value_t
 ${name}
 (
  p4_pd_sess_hdl_t sess_hdl,
  p4_pd_dev_target_t dev_tgt,
- p4_pd_entry_hdl_t entry_hdl
+ p4_pd_entry_hdl_t entry_hdl,
+ int flags
 );
 
-//::     table = binding[1]
-//::     name = "p4_pd_" + p4_prefix + "_" + table + "_table_read_" + type_ + "_counter_entry"
+//::     name = "p4_pd_" + p4_prefix + "_counter_write_" + counter
 /**
  * @brief ${name}
  * @param sess_hdl
  * @param dev_tgt
  * @param entry_hdl
+ * @param counter_value
 */
-uint64_t
+p4_pd_status_t
 ${name}
 (
  p4_pd_sess_hdl_t sess_hdl,
  p4_pd_dev_target_t dev_tgt,
- p4_pd_entry_hdl_t entry_hdl
+ p4_pd_entry_hdl_t entry_hdl,
+ p4_pd_counter_value_t counter_value
 );
 
 //::   else:
@@ -538,18 +540,42 @@ ${name}
  * @param sess_hdl
  * @param dev_tgt
  * @param index
+ * @param flags
 */
-uint64_t
+p4_pd_counter_value_t
 ${name}
 (
  p4_pd_sess_hdl_t sess_hdl,
  p4_pd_dev_target_t dev_tgt,
- int index
+ int index,
+ int flags
+);
+
+//::     name = "p4_pd_" + p4_prefix + "_counter_write_" + counter
+p4_pd_status_t
+${name}
+(
+ p4_pd_sess_hdl_t sess_hdl,
+ p4_pd_dev_target_t dev_tgt,
+ int index,
+ p4_pd_counter_value_t counter_value
 );
 
 //::   #endif
 //:: #endfor
 
+//:: for counter, c_info in counter_info.items():
+//::   name = "p4_pd_" + p4_prefix + "_counter_hw_sync_" + counter
+p4_pd_status_t
+${name}
+(
+ p4_pd_sess_hdl_t sess_hdl,
+ p4_pd_dev_target_t dev_tgt,
+ p4_pd_stat_sync_cb cb_fn,
+ void *cb_cookie
+);
+
+//:: #endfor
 
 /* GLOBAL TABLE COUNTERS */
 
@@ -779,8 +805,8 @@ ${p4_pd_set_entry_ttl}(p4_pd_sess_hdl_t sess_hdl, p4_pd_entry_hdl_t entry_hdl, u
 
 p4_pd_status_t
 ${p4_pd_enable_entry_timeout}(p4_pd_sess_hdl_t sess_hdl,
-                           p4_pd_notify_timeout_cb cb_fn,
-                           uint32_t max_ttl,
-                           void *client_data);
+			      p4_pd_notify_timeout_cb cb_fn,
+			      uint32_t max_ttl,
+			      void *client_data);
 //:: #endfor
 #endif
