@@ -115,7 +115,7 @@ void sai_simple_setup( void )
 
     sai_api_query(SAI_API_NEIGHBOR, (void **)&neighbor_api);
     if(neighbor_api) {
-        sai_neighbor_entry_t neighbor1 = {10, 0x0a000001, 2};
+        sai_neighbor_entry_t neighbor1 = {0x0a000001, 2};
         sai_attribute_t attr1[2];
         attr1[0].id = SAI_NEIGHBOR_ATTR_PORT_ID;
         attr1[0].value.u32 = 3;
