@@ -66,7 +66,7 @@ void sai_simple_setup( void )
 
     sai_api_query(SAI_API_ROUTER_INTERFACE, (void **)&router_interface_api);
     if(router_interface_api) {
-        sai_router_interface_entry_t router1 = {{0x00, 0x12, 0x34, 0x56, 0x78, 0x90}};
+        sai_router_interface_entry_t router1 = {0, 0, 2, {0x00, 0x12, 0x34, 0x56, 0x78, 0x90}};
         sai_attribute_t attr1[2];
         attr1[0].id = SAI_ROUTER_INTERFACE_ATTR_PORT_ID;
         attr1[0].value.u32 = 2;
