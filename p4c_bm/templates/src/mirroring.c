@@ -69,11 +69,11 @@ static tommy_hashlin mirroring_mappings;
 pthread_t mirroring_thread;
 
 static int compare_mirroring_mappings(const void* arg, const void* obj) {
-  return *(int *) arg != ((mirroring_mapping_t *) obj)->mirror_id;
+  return *(p4_pd_mirror_id_t *) arg != ((mirroring_mapping_t *) obj)->mirror_id;
 }
 
 static inline mirroring_mapping_t*
-get_mirroring_mapping(const int mirror_id) {
+get_mirroring_mapping(const p4_pd_mirror_id_t mirror_id) {
   mirroring_mapping_t *mapping;
   mapping = tommy_hashlin_search(&mirroring_mappings,
 				 compare_mirroring_mappings,
@@ -142,11 +142,16 @@ int ${pd_prefix}mirror_session_create(p4_pd_sess_hdl_t shdl,
                                       uint16_t egress_port,
                                       uint16_t max_pkt_len,
                                       uint8_t cos,
-                                      bool c2c
+                                      bool c2c,
+                                      uint16_t extract_len,
+                                      uint32_t timeout_usec,
+                                      uint32_t *int_hdr,
+                                      uint8_t int_hdr_len
                                      )
 {
     return ${pd_prefix}mirror_session_update(shdl, dev_tgt, type, dir,
-                        mirror_id, egress_port, max_pkt_len, cos, c2c, true);
+                        mirror_id, egress_port, max_pkt_len, cos, c2c,
+                        extract_len, timeout_usec, int_hdr, int_hdr_len, true);
 }
 
 int ${pd_prefix}mirror_session_update(p4_pd_sess_hdl_t shdl,
@@ -157,11 +162,17 @@ int ${pd_prefix}mirror_session_update(p4_pd_sess_hdl_t shdl,
                                       uint16_t egress_port,
                                       uint16_t max_pkt_len,
                                       uint8_t cos,
-                                      bool c2c, bool enable
+                                      bool c2c,
+                                      uint16_t extract_len,
+                                      uint32_t timeout_usec,
+                                      uint32_t *int_hdr,
+                                      uint8_t int_hdr_len,
+                                      bool enable
                                      )
 {
   (void)shdl; (void)dev_tgt; (void)type; (void)dir; (void)max_pkt_len;
-  (void)cos; (void)c2c, (void)enable;
+  (void)cos; (void)c2c, (void)enable; (void)extract_len; (void)timeout_usec;
+  (void)int_hdr; (void)int_hdr_len;
 
   return ${pd_prefix}mirroring_mapping_add(mirror_id, egress_port);
 
@@ -222,7 +233,12 @@ int ${pd_prefix}mirroring_add_coalescing_session(int mirror_id, int egress_port,
                                     egress_port,
                                     0/*max_pkt_len*/,
                                     0/*cos*/,
-                                    false/*c2c*/);
+                                    false/*c2c*/,
+                                    0, /*extract_len*/
+                                    0, /*timeout_usec*/
+                                    NULL, /*int_hdr*/
+                                    0 /*int_hdr_len*/
+                                    );
 
   mapping = get_mirroring_mapping(mirror_id);
   assert(NULL != mapping);
