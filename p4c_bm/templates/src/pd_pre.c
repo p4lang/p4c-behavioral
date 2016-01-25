@@ -57,8 +57,10 @@ p4_pd_mc_node_destroy(p4_pd_sess_hdl_t sess_hdl, int dev, p4_pd_entry_hdl_t node
 
 p4_pd_status_t
 p4_pd_mc_associate_node(p4_pd_sess_hdl_t sess_hdl, int dev, p4_pd_entry_hdl_t grp_hdl,
-                        p4_pd_entry_hdl_t l1_hdl)
+                        p4_pd_entry_hdl_t l1_hdl, uint16_t xid, bool xid_valid)
 {
+    (void) xid;
+    (void) xid_valid;
     return mc_associate_node(sess_hdl, grp_hdl, l1_hdl);
 }
 
@@ -75,4 +77,59 @@ p4_pd_mc_set_lag_membership(p4_pd_sess_hdl_t sess_hdl, int dev, uint8_t lag,
 {
     return mc_set_lag_membership(sess_hdl, dev, lag, port_map);
 }
+
+p4_pd_status_t
+p4_pd_mc_ecmp_create(p4_pd_sess_hdl_t session,
+                     int device,
+                     p4_pd_entry_hdl_t *ecmp_hdl) {
+  (void) session; (void) device; (void) ecmp_hdl;
+  return 0;
+}
+
+p4_pd_status_t
+p4_pd_mc_ecmp_destroy(p4_pd_sess_hdl_t session,
+                      int device,
+                      p4_pd_entry_hdl_t ecmp_hdl) {
+  (void) session; (void) device; (void) ecmp_hdl;
+  return 0;
+}
+
+p4_pd_status_t
+p4_pd_mc_ecmp_mbr_add(p4_pd_sess_hdl_t session,
+                      int device,
+                      p4_pd_entry_hdl_t ecmp_hdl,
+                      p4_pd_entry_hdl_t l1_hdl) {
+  (void) session; (void) device; (void) ecmp_hdl; (void) l1_hdl;
+  return 0;
+}
+
+p4_pd_status_t
+p4_pd_mc_ecmp_mbr_rem(p4_pd_sess_hdl_t session,
+                      int device,
+                      p4_pd_entry_hdl_t ecmp_hdl,
+                      p4_pd_entry_hdl_t l1_hdl) {
+  (void) session; (void) device; (void) ecmp_hdl; (void) l1_hdl;
+  return 0;
+}
+
+p4_pd_status_t
+p4_pd_mc_associate_ecmp(p4_pd_sess_hdl_t session,
+                        int device,
+                        p4_pd_entry_hdl_t grp_hdl,
+                        p4_pd_entry_hdl_t ecmp_hdl,
+                        uint16_t xid, bool xid_valid) {
+  (void) session; (void) device; (void) grp_hdl; (void) ecmp_hdl;
+  (void) xid_valid;
+  return 0;
+}
+
+p4_pd_status_t
+p4_pd_mc_dissociate_ecmp(p4_pd_sess_hdl_t session,
+                         int device,
+                         p4_pd_entry_hdl_t grp_hdl,
+                         p4_pd_entry_hdl_t ecmp_hdl) {
+  (void) session; (void) device; (void) grp_hdl; (void) ecmp_hdl;
+  return 0;
+}
+
 //:: #endif
