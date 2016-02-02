@@ -107,6 +107,9 @@ DROP(phv_data_t *phv) {
   /* behavior is different depending on the current pipeline */
   if(phv->pipeline_type == RMT_PIPELINE_INGRESS) {
     fields_set_egress_spec(phv, 511);
+//:: if "ingress_drop_ctl" in extra_metadata_name_map:
+    fields_set_ingress_drop_ctl(phv, 1);
+//:: #endif
   }
   else {
     assert(phv->pipeline_type == RMT_PIPELINE_EGRESS);

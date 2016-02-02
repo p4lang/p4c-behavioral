@@ -37,6 +37,10 @@ public:
     return ::mc_destroy_session(sess_hdl);
   }
 
+  int32_t mc_complete_operations(const SessionHandle_t sess_hdl){
+    return ::mc_complete_operations(sess_hdl);
+  }
+
   McHandle_t mc_mgrp_create(const SessionHandle_t sess_hdl, const int dev, const int16_t mgid){
     McHandle_t grp_hdl;
     ::mc_mgrp_create(sess_hdl, dev, mgid, (uint32_t*)&grp_hdl);
@@ -53,7 +57,7 @@ public:
     return l1_hdl;
   }
 
-  McHandle_t mc_node_update(const SessionHandle_t sess_hdl, const int dev,  const McHandle_t node_hdl, const std::string &port_map, const std::string &lag_map){
+  McHandle_t mc_node_update(const SessionHandle_t sess_hdl, const int dev, const McHandle_t node_hdl, const std::string &port_map, const std::string &lag_map){
     return ::mc_node_update(sess_hdl, node_hdl, (uint8_t*)port_map.c_str(), (uint8_t*)lag_map.c_str());
   }
 

@@ -110,9 +110,53 @@ uint32_t bytes_to_uint32(uint8_t *bytes, int len) {
   return ntohl(*(uint32_t *) (bytes + len - sizeof(uint32_t)));
 }
 
+//:: for action_name, a_info in action_info.items():
+static void
+action_${action_name}_dump_action_data(uint8_t *data, char *action_desc, int max_length) {
+  int length;
+  (void)length;
+//::   param_names =  a_info["param_names"]
+//::   param_byte_widths = a_info["param_byte_widths"]
+//::   for name, width in zip(param_names, param_byte_widths):
+//::     # for unused parameters
+//::     if width == 0: continue
+//::     format_str = "%02x" * width
+//::     args_str = ", ".join(["data[%d]" % i for i in xrange(width)])
+  length = sprintf(action_desc, "%s: 0x${format_str}", "${name}", ${args_str});
+  max_length -= length;
+  assert(max_length > 0);
+  action_desc += length;
+//::     if width == 4:
+//::       format_str = " ".join(["%hhu" for i in xrange(width)])
+  length = sprintf(action_desc, " (${format_str})", ${args_str});
+  max_length -= length;
+  assert(max_length > 0);
+  action_desc += length;
+//::     #endif
+  length = sprintf(action_desc, ",\t");
+  max_length -= length;
+  assert(max_length > 0);
+  action_desc += length;
+  data += ${width};
+//::   #endfor
+}
+
+//:: #endfor
+
 //:: for action_name, action in action_info.items():
 void action_${action_name} (phv_data_t *phv, void *action_data) {
   RMT_LOG(P4_LOG_LEVEL_TRACE, "action %s\n", "${action_name}");
+#ifdef DEBUG
+  if(P4_LOG_LEVEL_TRACE <= RMT_LOG_LEVEL) {
+    char buffer[4096];
+    memset(buffer, 0, sizeof(buffer));
+    action_${action_name}_dump_action_data(action_data, buffer, 4096);
+    if (buffer[0]) {
+      RMT_PRINT("action data:\n\t");
+      RMT_PRINT("%s\n", buffer);
+    }
+  }
+#endif
 //::    for call in action["call_sequence"]:
 //::        args = call[1]
 //::        if call[0] == "MODIFY_FIELD":
@@ -290,11 +334,11 @@ void action_${action_name} (phv_data_t *phv, void *action_data) {
   uint32_t ${m_name}_color;
 //::            if m_info["type_"] == "packets":
   ${m_name}_color = (uint32_t) stateful_execute_meter(&meter_${m_name},
-						      bytes_to_uint32(${format_arg(action, args[1])}, ${index_bytes}),
+						      bytes_to_uint32(${format_arg_ptr(action, args[1])}, ${index_bytes}),
 						      1);
 //::            else:
   ${m_name}_color = (uint32_t) stateful_execute_meter(&meter_${m_name},
-						      bytes_to_uint32(${format_arg(action, args[1])}, ${index_bytes}),
+						      bytes_to_uint32(${format_arg_ptr(action, args[1])}, ${index_bytes}),
 						      fields_get_packet_length(phv));
 //::            #endif
 //::            m_dst = args[2][1]
@@ -424,39 +468,6 @@ void action_${action_name} (phv_data_t *phv, void *action_data) {
 		     ${arg_str});
 //::        #endif    
 //::    #endfor    
-}
-
-//:: #endfor
-
-//:: for action_name, a_info in action_info.items():
-static void
-action_${action_name}_dump_action_data(uint8_t *data, char *action_desc, int max_length) {
-  int length;
-  (void)length;
-//::   param_names =  a_info["param_names"]
-//::   param_byte_widths = a_info["param_byte_widths"]
-//::   for name, width in zip(param_names, param_byte_widths):
-//::     # for unused parameters
-//::     if width == 0: continue
-//::     format_str = "%02x" * width
-//::     args_str = ", ".join(["data[%d]" % i for i in xrange(width)])
-  length = sprintf(action_desc, "%s: 0x${format_str}", "${name}", ${args_str});
-  max_length -= length;
-  assert(max_length > 0);
-  action_desc += length;
-//::     if width == 4:
-//::       format_str = " ".join(["%hhu" for i in xrange(width)])
-  length = sprintf(action_desc, " (${format_str})", ${args_str});
-  max_length -= length;
-  assert(max_length > 0);
-  action_desc += length;
-//::     #endif
-  length = sprintf(action_desc, ",\t");
-  max_length -= length;
-  assert(max_length > 0);
-  action_desc += length;
-  data += ${width};
-//::   #endfor
 }
 
 //:: #endfor

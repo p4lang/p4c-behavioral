@@ -94,7 +94,7 @@ static void *pkt_processing_loop(void *arg) {
 //:: if "ingress_drop_ctl" in extra_metadata_name_map:
       // program uses the separate ingress_drop_ctl register
       // a non-zero value means drop
-      if(egress_port = 511 || metadata_get_ingress_drop_ctl(metadata)) {
+      if(egress_port == 511 || metadata_get_ingress_drop_ctl(metadata)) {
 //:: else:
       if(egress_port == 511) {
 //:: #endif

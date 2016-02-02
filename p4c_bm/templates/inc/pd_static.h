@@ -20,6 +20,11 @@ limitations under the License.
 #include <stdint.h>
 #include <stdbool.h>
 
+enum {
+  P4_PD_SUCCESS = 0,
+  P4_PD_FAILURE = 20
+};
+
 typedef uint32_t p4_pd_status_t;
 
 typedef uint32_t p4_pd_sess_hdl_t;
@@ -27,12 +32,14 @@ typedef uint32_t p4_pd_sess_hdl_t;
 typedef uint32_t p4_pd_entry_hdl_t;
 typedef uint32_t p4_pd_mbr_hdl_t;
 typedef uint32_t p4_pd_grp_hdl_t;
+typedef uint64_t p4_pd_stat_t;
+
 /* TODO: change that, it is horrible */
 typedef void* p4_pd_value_hdl_t;
 
 #define PD_DEV_PIPE_ALL 0xffff
 typedef struct p4_pd_dev_target {
-  uint8_t device_id; /*!< Device Identifier the API request is for */
+  int device_id; /*!< Device Identifier the API request is for */
   uint16_t dev_pipe_id;/*!< If specified localizes target to the resources
 			 * only accessible to the port. DEV_PIPE_ALL serves
 			 * as a wild-card value
@@ -71,6 +78,8 @@ p4_pd_commit_txn(p4_pd_sess_hdl_t shdl, bool hwSynchronous, bool *sendRsp);
 p4_pd_status_t
 p4_pd_complete_operations(p4_pd_sess_hdl_t shdl);
 
+int32_t p4_pd_set_meter_time(p4_pd_sess_hdl_t shdl,
+                     int32_t meter_time_disable);
 uint16_t
 p4_pd_dev_port_to_pipe_id(uint16_t dev_port_id);
 
@@ -93,6 +102,37 @@ typedef enum {
     PD_DIR_BOTH
 } p4_pd_direction_t;
 
-typedef uint16_t p4_pd_mirror_id_t;
+typedef enum {
+    PD_METER_TYPE_COLOR_AWARE,    /* Color aware meter */
+    PD_METER_TYPE_COLOR_UNAWARE,  /* Color unaware meter */
+} p4_pd_meter_type_t;
 
+typedef enum {
+    PD_INGRESS_POOL_0,
+    PD_INGRESS_POOL_1,
+    PD_INGRESS_POOL_2,
+    PD_INGRESS_POOL_3,
+    PD_EGRESS_POOL_0,
+    PD_EGRESS_POOL_1,
+    PD_EGRESS_POOL_2,
+    PD_EGRESS_POOL_3,
+} p4_pd_pool_id_t;
+
+typedef struct p4_pd_packets_meter_spec {
+  uint32_t cir_pps;
+  uint32_t cburst_pkts;
+  uint32_t pir_pps;
+  uint32_t pburst_pkts;
+  p4_pd_meter_type_t meter_type;
+} p4_pd_packets_meter_spec_t;
+
+typedef struct p4_pd_bytes_meter_spec {
+  uint32_t cir_kbps;
+  uint32_t cburst_kbits;
+  uint32_t pir_kbps;
+  uint32_t pburst_kbits;
+  p4_pd_meter_type_t meter_type;
+} p4_pd_bytes_meter_spec_t;
+
+typedef uint16_t p4_pd_mirror_id_t;
 #endif

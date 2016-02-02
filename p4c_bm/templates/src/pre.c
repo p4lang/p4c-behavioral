@@ -308,6 +308,58 @@ p4_pd_status_t mc_node_destroy(p4_pd_sess_hdl_t session,
     return 0;
 }
 
+static void
+mc_dump_port_map(uint8_t *port_map)
+{
+    mgrp_port_id_t        port_id = 0;
+    bool                  port_is_set = FALSE;
+    int                   i = 0;
+    int                   j = 0;
+
+    RMT_LOG(P4_LOG_LEVEL_TRACE, "\tport map: ");
+    for (i = 0; i < PRE_PORT_MAP_ARRAY_SIZE; i++) {
+        for (j = 0; j < 8; j++) {
+            port_is_set = port_map[i] & (1 << j); 
+            if (port_is_set) {
+                port_id = (i * 8) + j;
+                RMT_LOG(P4_LOG_LEVEL_TRACE, "%x ", port_id);
+            }
+        }
+    }
+    RMT_LOG(P4_LOG_LEVEL_TRACE, "\n\n");
+}
+
+static void
+mc_dump_lag_map(uint8_t *lag_map)
+{
+    mgrp_lag_id_t         lag_id = 0;
+    bool                  lag_is_set = FALSE;
+    int                   i = 0;
+    int                   j = 0;
+
+    RMT_LOG(P4_LOG_LEVEL_TRACE, "\tlag map: ");
+    for (i = 0; i < PRE_LAG_MAP_ARRAY_SIZE; i++) {
+        for (j = 0; j < 8; j++) {
+            lag_is_set = lag_map[i] & (1 << j); 
+            if (lag_is_set) {
+                lag_id = (i * 8) + j;
+                RMT_LOG(P4_LOG_LEVEL_TRACE, "%x ", lag_id);
+            }
+        }
+    }
+    RMT_LOG(P4_LOG_LEVEL_TRACE, "\n\n");
+}
+
+static void
+mc_dump_node(int l2_index)
+{
+    l2_node_t            *l2_node = NULL;
+
+    l2_node = &l2_table[l2_index];
+    mc_dump_port_map(l2_node->port_map);
+    mc_dump_lag_map(l2_node->lag_map);
+}
+
 /*
  Update L1 Multicast Node
  @param session - session handle
@@ -347,6 +399,9 @@ p4_pd_status_t mc_node_update(p4_pd_sess_hdl_t session,
     memcpy(l2_node->port_map, port_map, PRE_PORT_MAP_ARRAY_SIZE);
     memcpy(l2_node->lag_map, lag_map, PRE_LAG_MAP_ARRAY_SIZE);
 
+    RMT_LOG(P4_LOG_LEVEL_TRACE, "mgid : adding entry\n\t");
+    RMT_LOG(P4_LOG_LEVEL_TRACE, "mgid : %x\n", l1_node->mgid);
+    mc_dump_node(l2_index);
     pthread_rwlock_unlock(&l2_table_lock);
     pthread_rwlock_unlock(&l1_table_lock);
     return 0;
@@ -460,6 +515,7 @@ p4_pd_status_t mc_set_lag_membership(p4_pd_sess_hdl_t session,
     lag = &lag_table[lag_id];
     memcpy(lag->port_map, port_map, PRE_PORT_MAP_ARRAY_SIZE);
     lag->port_count = 0;
+
     for (i = 0; i < PRE_PORT_MAP_ARRAY_SIZE; i++) {
         for (j = 0; j < 8; j++) {
             port_set = (lag->port_map[i] >> j) & 0x1;
@@ -468,6 +524,11 @@ p4_pd_status_t mc_set_lag_membership(p4_pd_sess_hdl_t session,
             }
         }
     }
+
+    RMT_LOG(P4_LOG_LEVEL_TRACE, "mc lag: adding entry\n");
+    RMT_LOG(P4_LOG_LEVEL_TRACE, "\tlag_id: %x\n", lag_id);
+    mc_dump_port_map(lag->port_map);
+
     pthread_rwlock_unlock(&lag_table_lock);
     return 0;
 }
@@ -549,6 +610,10 @@ static void mc_replicate_packet(mc_l2_node_hdl_t l2_hdl, mgrp_rid_t rid,
 
     memcpy(local_metadata, metadata, LOCAL_METADATA_LENGTH);
     lag_hash = metadata_get_lag_hash(local_metadata);
+
+    RMT_LOG(P4_LOG_LEVEL_TRACE, "\trid: %x\n", rid);
+    mc_dump_node(l2_index);
+
     /*
      * metadata, metada_recirc and pkt_data are allocated for
      * every packet that is replicated. It is freed in the egress
@@ -573,7 +638,7 @@ static void mc_replicate_packet(mc_l2_node_hdl_t l2_hdl, mgrp_rid_t rid,
                 metadata_set_egress_port(local_metadata, port_id);
                 metadata_set_replication_id(local_metadata, rid);
                 metadata_dump(q_metadata_copy, local_metadata);
-
+                RMT_LOG(P4_LOG_LEVEL_VERBOSE, "replicating on port %x\n", port_id);
                 egress_pipeline_receive(port_id, q_metadata_copy,
                                         metadata_recirc_copy, pkt_data_copy,
                                         b_pkt->pkt_len, b_pkt->pkt_id,
@@ -600,7 +665,7 @@ static void mc_replicate_packet(mc_l2_node_hdl_t l2_hdl, mgrp_rid_t rid,
                 metadata_set_egress_port(local_metadata, lag_port_id);
                 metadata_set_replication_id(local_metadata, rid);
                 metadata_dump(q_metadata_copy, local_metadata);
-
+                RMT_LOG(P4_LOG_LEVEL_TRACE, "replicating on lag port %x\n", port_id);
                 egress_pipeline_receive(lag_port_id, q_metadata_copy,
                                         metadata_recirc_copy, pkt_data_copy,
                                         b_pkt->pkt_len, b_pkt->pkt_id,
@@ -631,8 +696,14 @@ void mc_process_and_replicate(uint16_t mgid, uint8_t *metadata,
 
     pthread_rwlock_rdlock(&mgid_table_lock);
     mgrp = &mgid_table[mgid];
+
+    RMT_LOG(P4_LOG_LEVEL_TRACE, "Applying table mgid\n");
+    RMT_LOG(P4_LOG_LEVEL_TRACE, "Lookup key for mgid:\n");
+    RMT_LOG(P4_LOG_LEVEL_TRACE, "\tmgid: %x\n", mgid);
+
     if (!mgrp->valid) {
         // Drop the packet. Invalid MGID
+        RMT_LOG(P4_LOG_LEVEL_TRACE, "table miss\n");
         pthread_rwlock_unlock(&mgid_table_lock);
         return;
     }

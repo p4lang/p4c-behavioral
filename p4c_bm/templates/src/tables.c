@@ -687,10 +687,20 @@ static inline void build_key_${table}(phv_data_t *phv, uint8_t *key) {
 //::   #endif
   int byte_offset_phv;
   (void)byte_offset_phv; /* Compiler reference */
+#ifdef DEBUG
+  if(P4_LOG_LEVEL_TRACE <= RMT_LOG_LEVEL) {
+    printf("Lookup key for ${table}:\n\t");
+  }
+#endif
 //::   key_width = t_info["key_byte_width"]
 //::   for field, m_type in t_info["reordered_match_fields"]:
 //::     if m_type == "valid":
   *(key++) = (uint8_t ) phv_is_valid_header(phv, PHV_GET_HEADER(phv, RMT_HEADER_INSTANCE_${field}));
+#ifdef DEBUG
+  if(P4_LOG_LEVEL_TRACE <= RMT_LOG_LEVEL) {
+    printf("%2s: 0x%08x, ", rmt_header_instance_string[RMT_HEADER_INSTANCE_${field}], (uint8_t)*(key-1));
+  }
+#endif
 //::       continue
 //::     #endif
 //::     f_info = field_info[field]
@@ -703,21 +713,27 @@ static inline void build_key_${table}(phv_data_t *phv, uint8_t *key) {
   memcpy(key, phv_buf_field_byte_buf_get(phv, byte_offset_phv), ${byte_width});
   key += ${byte_width};
 //::     #endif
+#ifdef DEBUG
+  if(P4_LOG_LEVEL_TRACE <= RMT_LOG_LEVEL) {
+    fields_print(phv, RMT_FIELD_INSTANCE_${field});
+  }
+#endif
 //::   #endfor
+#ifdef DEBUG
+  if(P4_LOG_LEVEL_TRACE <= RMT_LOG_LEVEL) {
+    printf("\n");
+  }
+#endif
 //::   if t_info["has_mask"]:
   uint8_t big_mask[${key_width}] = {
 //::     for c in t_info["big_mask"]:
     ${c},
 //::     #endfor
   };
-//::     if key_width <= 4:
-  *(uint32_t *) key_mask = (*(uint32_t *) key_mask) & (*(uint32_t) big_mask);
-//::     else:
   int i;
   for(i = 0; i < ${key_width}; i++) {
     key_mask[i] &= big_mask[i];
   }
-//::     #endif
 //::   #endif
 }
 
@@ -819,7 +835,7 @@ static void update_counters_${table}(phv_data_t *phv, int entry_index) {
   }
   pthread_mutex_unlock(&table->counters_lock);
 
-//::   if t_info["bytes_counter"] or t_info["bytes_counter"]:
+//::   if t_info["packets_counter"] or t_info["bytes_counter"]:
   if (entry_index  >= 0) {
 //::     if t_info["packets_counter"]:
     stateful_increase_counter(table->packets_counters, entry_index, 1);

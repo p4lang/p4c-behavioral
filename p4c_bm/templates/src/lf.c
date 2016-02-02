@@ -231,6 +231,7 @@ static tommy_list ${lq["name"]}_clients;
 
 p4_pd_status_t
 ${lq["lf_register_fn"]}(p4_pd_sess_hdl_t sess_hdl, ${lq["cb_fn_type"]} cb_fn, void *client_data) {
+  pthread_mutex_lock(&lf_lock);
   if (NULL != find_client(&${lq["name"]}_clients, sess_hdl)) {
     pthread_mutex_unlock(&lf_lock);
 
