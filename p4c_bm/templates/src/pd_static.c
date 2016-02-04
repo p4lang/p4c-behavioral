@@ -17,6 +17,7 @@ limitations under the License.
 #include <p4_sim/pd_static.h>
 
 #include "rmt_internal.h"
+#include "stateful.h"
 
 #include <assert.h>
 #include <pthread.h>
@@ -99,4 +100,10 @@ uint16_t
 p4_pd_dev_port_to_pipe_id(uint16_t dev_port_id)
 {
     return ((dev_port_id >> 7) & 0x3);
+}
+
+int32_t
+p4_pd_set_meter_time(p4_pd_sess_hdl_t shdl, int32_t meter_time_disable)
+{
+    return stateful_meter_set_meter_time(meter_time_disable);
 }

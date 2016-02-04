@@ -187,16 +187,17 @@ const char *rmt_field_instance_string[RMT_FIELD_INSTANCE_COUNT + 1] = {
 void fields_print(phv_data_t *phv, rmt_field_instance_t field){
   rmt_field_data_type_t type = rmt_field_data_type(field);
   int phv_offset = rmt_field_byte_offset_phv(field);
-  printf("field %s\n---->\t", rmt_field_instance_string[field]);
+  printf("%s: ", rmt_field_instance_string[field]);
   if (type == RMT_FIELD_DATA_TYPE_UINT32) {
-    printf("%x\n", ntohl(phv_buf_field_uint32_get(phv, phv_offset)));
+    printf("0x%08x, ", ntohl(phv_buf_field_uint32_get(phv, phv_offset)));
   }
   else {
     uint8_t *buf = phv_buf_field_byte_buf_get(phv, phv_offset);
     int i;
+    printf("0x");
     for(i = 0; i < rmt_field_byte_width_phv(field); i++)
-      printf("%x\t", buf[i]);
-    printf("\n");
+      printf("%02x", buf[i]);
+    printf(", ");
   }
 }
 

@@ -45,7 +45,7 @@ _MODIFY_FIELD_BYTE_BUF(uint8_t *dst_ptr, int dst_len,
 
   for (src_idx = (src_len <= dst_len) ? 0 : src_len - dst_len,
 	 dst_idx = (dst_len <= src_len) ? 0 : dst_len - src_len,
-	 mask_idx = mask_len - dst_len;
+	 mask_idx = mask_len - src_len;
        src_idx < src_len;
        src_idx++, dst_idx++, mask_idx++)
     {

@@ -111,6 +111,7 @@ extern p4_log_level_t rmt_log_level_get(void);
  * Queue configuration
  */
 
+extern void rmt_cleanup(void);
 extern int set_packets_per_sec(const int pps);
 extern int set_drop_tail_thr(const int thr);
 

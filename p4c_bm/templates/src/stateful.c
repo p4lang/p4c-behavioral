@@ -27,6 +27,7 @@ limitations under the License.
 #include "primitives.h"
 
 static struct timeval time_init;
+bool meter_time_disabled = false;
 
 struct counter_s {
   uint64_t *instances;
@@ -118,6 +119,10 @@ void stateful_increase_counter(counter_t *counter, int index, uint64_t value) {
   pthread_mutex_lock(&counter->lock);
   counter->instances[index] += value;
   pthread_mutex_unlock(&counter->lock);
+  RMT_LOG(P4_LOG_LEVEL_VERBOSE,
+	  "counter %s[%d] was incremented, new value is %llu\n",
+	  counter->name, index,
+	  counter->instances[index]);
 }
 
 void stateful_reset_counter(counter_t *counter, int index) {
@@ -158,26 +163,38 @@ char *color_to_str(meter_color_t color) {
   }
 }
 
+int32_t
+stateful_meter_set_meter_time(int32_t meter_time_disable)
+{
+    meter_time_disabled = meter_time_disable;
+    return 0;
+}
+
+uint64_t get_time_since_init()
+{
+  struct timeval now;
+  if (meter_time_disabled) {
+    return 0;
+  }
+  gettimeofday(&now, NULL);
+  uint64_t time_since_init = (now.tv_sec - time_init.tv_sec) * 1000000 +
+    (now.tv_usec - time_init.tv_usec);
+  return time_since_init;
+}
+
 meter_color_t stateful_execute_meter(meter_t *meter, int index, uint32_t input) {
   pthread_mutex_lock(&meter->lock);
 
   meter_instance_t *instance = &meter->instances[index];
 
-  struct timeval now;
-  gettimeofday(&now, NULL);
-  uint64_t time_since_init = (now.tv_sec - time_init.tv_sec) * 1000000 +
-    (now.tv_usec - time_init.tv_usec);
-
+  uint64_t time_since_init = get_time_since_init();
   uint64_t usec_diff;
 
   uint32_t new_tokens;
   meter_queue_t *queue;
-  
-
-  meter_color_t color = METER_EXCEED_ACTION_COLOR_GREEN;
 
   int i;
-  for(i = 1; i < METER_EXCEED_ACTION_COLOR_END_; i++) {
+  for(i = 0; i < METER_EXCEED_ACTION_COLOR_END_; i++) {
     queue = &instance->queues[i];
     if(!queue->valid) continue;
     usec_diff = time_since_init - queue->last_timestamp;
@@ -186,23 +203,27 @@ meter_color_t stateful_execute_meter(meter_t *meter, int index, uint32_t input) 
     if(new_tokens > 0) {
       queue->tokens += new_tokens;
       if(queue->tokens > queue->burst_size) {
-	queue->tokens = queue->burst_size;
+	    queue->tokens = queue->burst_size;
       }
       /* TODO : improve this ? */
       queue->last_timestamp += (uint32_t) (new_tokens / queue->info_rate);
     }
 
     RMT_LOG(P4_LOG_LEVEL_TRACE,
-	    "adding %u tokens, now have %u\n",
+	    "adding %u tokens, now have %u %u\n",
 	    new_tokens,
-	    queue->tokens);
+	    queue->tokens, input);
+  }
 
+  meter_color_t color = METER_EXCEED_ACTION_COLOR_RED;
+  for(i = METER_EXCEED_ACTION_COLOR_END_ - 1; i >= 0; i--) {
+    queue = &instance->queues[i];
+    if(!queue->valid) continue;
     if(queue->tokens < input) {
-      color = queue->color;
-    }
-    else {
-      queue->tokens -= input;
       break;
+    } else {
+      color = queue->color;
+      queue->tokens -= input;
     }
   }
 

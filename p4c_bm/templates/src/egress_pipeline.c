@@ -37,7 +37,7 @@ limitations under the License.
 #include "mirroring_internal.h"
 #include <p4_sim/traffic_manager.h>
 #include <p4utils/atomic_int.h>
-
+#include "pg_int.h"
 
 typedef struct egress_pkt_s {
   buffered_pkt_t pkt;
@@ -136,8 +136,6 @@ static void *processing_loop_egress(void *arg) {
 
     fields_set_instance_type(pipeline->phv, e_pkt->pkt.instance_type);
 
-    free(e_pkt->metadata);
-    free(e_pkt->metadata_recirc);
     if(pipeline->table_entry_fn)  /* empty egress pipeline ? */
       pipeline->table_entry_fn(pipeline->phv);
 
@@ -155,7 +153,6 @@ static void *processing_loop_egress(void *arg) {
     update_checksums(pipeline->phv);
     pipeline->deparse_fn(pipeline->phv, &pkt_data, &pkt_len);
 
-    free(b_pkt->pkt_data);
 
 //:: if "egress_drop_ctl" in extra_metadata_name_map:
       // program uses the separate egress_drop_ctl register
@@ -166,6 +163,9 @@ static void *processing_loop_egress(void *arg) {
     if(pipeline->phv->deparser_drop_signal){
 //:: #endif
       RMT_LOG(P4_LOG_LEVEL_VERBOSE, "dropping packet at egress\n");
+      free(e_pkt->metadata);
+      free(e_pkt->metadata_recirc);
+      free(b_pkt->pkt_data);
       free(e_pkt);
       continue;
     }
@@ -173,8 +173,21 @@ static void *processing_loop_egress(void *arg) {
 
     if(pipeline->phv->truncated_length && (pipeline->phv->truncated_length < pkt_len))
       pkt_len = pipeline->phv->truncated_length;
-    
-    pkt_manager_transmit(egress, pkt_data, pkt_len, b_pkt->pkt_id);
+
+    if (pktgen_is_recirc_en(pktgen_get_pipe(egress), pktgen_get_port(egress))) {
+      ingress_pipeline_receive(egress,
+          e_pkt->metadata,
+          e_pkt->metadata_recirc,
+          pkt_data,
+          pkt_len,
+          b_pkt->pkt_id,
+          PKT_INSTANCE_TYPE_INGRESS_RECIRC);
+    } else {
+      free(e_pkt->metadata);
+      free(e_pkt->metadata_recirc);
+      pkt_manager_transmit(egress, pkt_data, pkt_len, b_pkt->pkt_id);
+    }
+    free(b_pkt->pkt_data);
     free(e_pkt);
   }
 
@@ -186,7 +199,7 @@ pipeline_t *pipeline_create(int id) {
   pipeline_t *pipeline = malloc(sizeof(pipeline_t));
   pipeline->name = "egress";
 #ifdef RATE_LIMITING
-  pipeline->cb_in = cb_init(read_atomic_int(&EGRESS_CB_SIZE), CB_WRITE_DROP, CB_READ_RETURN);
+  pipeline->cb_in = cb_init(read_atomic_int(&EGRESS_CB_SIZE), CB_WRITE_DROP, CB_READ_BLOCK);
 #else
   pipeline->cb_in = cb_init(read_atomic_int(&EGRESS_CB_SIZE), CB_WRITE_BLOCK, CB_READ_BLOCK);
 #endif
@@ -240,7 +253,7 @@ int egress_pipeline_receive(int egress,
   uint8_t extracted_metadata[${bytes}];
   metadata_extract(extracted_metadata, metadata, NULL); /* NULL ? */
   uint32_t deflect_on_drop = metadata_get_deflect_on_drop(extracted_metadata);
-  if (!deflect_on_drop) {
+  if (!deflect_on_drop || !cb_qfull(pipeline->cb_in)) {
     int ret = cb_write(pipeline->cb_in, e_pkt);
     if (ret == 0) {
       free(e_pkt);

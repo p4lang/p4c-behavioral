@@ -52,6 +52,15 @@ ofpat_action_get (Pvoid_t *aargs, enum ofp_action_type t) {
     }
 }
 
+/****************************************
+ * special match for ofpat_group_egress *
+ ****************************************/
+
+typedef struct ofpat_group_egress_match_ {
+    uint32_t group_id;
+    uint16_t egr_port;
+} ofpat_group_egress_match_spec_t_;
+
 /*************
  * Pipelines *
  *************/
@@ -87,9 +96,12 @@ ofpat_pipeline_add (uint32_t bmap, ofpat_pipeline_key_t *key, Pvoid_t *aargs) {
         ${p4_pd_prefix}ofpat_group_egress_match_spec_t ms;
         ${p4_pd_prefix}ofpat_group_egress_update_action_spec_t as;
 
-        // this is field name dependent
-        ms.openflow_metadata_group_id = *key->group_id;
-        ms.standard_metadata_egress_port = *key->egr_port;
+       // ms.openflow_metadata_group_id = *key->group_id;
+       // ms.standard_metadata_egress_port = *key->egr_port;
+       // as.action_bmap = bmap;
+
+        ((ofpat_group_egress_match_spec_t_ *) &ms)->group_id = *key->group_id;
+        ((ofpat_group_egress_match_spec_t_ *) &ms)->egr_port = *key->egr_port;
         as.action_bmap = bmap;
 
         status = ${p4_pd_prefix}ofpat_group_egress_table_add_with_ofpat_group_egress_update

@@ -62,16 +62,15 @@ BM_TENJIN_OUTPUT_CPP += $(addprefix ${BM_BUILD_DIR}/src/, $(notdir ${BM_TEMPLATE
 PD_PUBLIC_HEADERS_DIR := ${PUBLIC_INC_PATH}/p4_sim
 BM_TENJIN_OUTPUT_PUBLIC_HEADERS := $(addprefix ${PD_PUBLIC_HEADERS_DIR}/, $(notdir ${BM_TEMPLATES_PUBLIC_HEADERS}))
 
-THRIFT_FILES_WITH_SERVICES = p4_pd_rpc conn_mgr_pd_rpc mc_pd_rpc
+THRIFT_FILES_WITH_SERVICES = p4_pd_rpc conn_mgr_pd_rpc mc_pd_rpc devport_mgr_pd_rpc
 THRIFT_FILES = ${THRIFT_FILES_WITH_SERVICES} res
-THRIFT_SERVICES = ${P4_PREFIX} conn_mgr mc
+THRIFT_SERVICES = ${P4_PREFIX} conn_mgr mc devport_mgr
 THRIFT_PD_BASENAMES = $(addsuffix _constants, ${THRIFT_FILES})
 THRIFT_PD_BASENAMES += $(addsuffix _types, ${THRIFT_FILES})
 THRIFT_PD_BASENAMES += ${THRIFT_SERVICES}
 
 BM_TENJIN_OUTPUT_THRIFT = $(addprefix ${BM_BUILD_THRIFT_DIR}/, $(addsuffix .thrift, ${THRIFT_FILES}))
 BM_TENJIN_OUTPUT_THRIFT_SERVICES = $(addprefix ${BM_BUILD_THRIFT_DIR}/, $(addsuffix .thrift, ${THRIFT_FILES_WITH_SERVICES}))
-
 
 # Output of Tenjin are the following files:
 # p4c_bm/templates/src/*.c
@@ -94,7 +93,7 @@ endif
 
 # Make the oldest Tenjin output depend on P4 program and input templates.
 ${BM_TENJIN_OUTPUT_OLDEST}: %: $(BM_TEMPLATES) ${P4_INPUT} $(wildcard ${P4_INCLUDES_DIR}/*.p4) $(wildcard ${P4_INCLUDES_DIR}/*.h)
-	${BM_SHELL} ${P4_INPUT} ${BM_PARAMS}
+	${BM_SHELL} ${P4_INPUT} ${BM_PARAMS} ${TARGET_PARAMS}
 
 # Make all Tenjin output files depend on the oldest Tenjin output file.
 BM_TENJIN_DUMMY_TARGETS := $(filter-out ${BM_TENJIN_OUTPUT_OLDEST}, ${BM_TENJIN_OUTPUT})
@@ -142,6 +141,7 @@ THRIFT_SERVICE_NAMES := ${THRIFT_SERVICES}
 include ${MAKEFILES_DIR}/thrift-py.mk
 
 ${BM_LIB}: ${BM_OBJS_C} ${BM_OBJS_CPP}
-	ar -rc $@ $^
+	@echo "    Creating : $(notdir $@)"
+	$(VERBOSE)ar -rc $@ $^
 
 .PHONY: bm.a

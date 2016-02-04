@@ -29,6 +29,8 @@ limitations under the License.
 #include "rmt_internal.h"
 #include "pkt_manager.h"
 #include "calculations.h"
+#include "portmanager.h"
+#include "pg_int.h"
 
 rmt_instance_t *rmt_instance;
 
@@ -36,6 +38,8 @@ void rmt_init(void) {
   rmt_instance = malloc(sizeof(rmt_instance_t));
   memset(rmt_instance, 0, sizeof(rmt_instance_t));
 
+  portmgr_init();
+  pktgen_init();
   tables_init();
   action_profiles_init();
   stateful_init();
@@ -46,7 +50,7 @@ void rmt_init(void) {
 
 int rmt_process_pkt(p4_port_t ingress, void *pkt, int len) {
   RMT_LOG(P4_LOG_LEVEL_VERBOSE, "new packet, len : %d, ingress : %d\n",
-	  len, ingress);
+      len, ingress);
 
   return pkt_manager_receive(ingress, pkt, len);
 }
@@ -65,4 +69,10 @@ p4_log_level_t rmt_log_level_get() {
 
 void rmt_transmit_register(rmt_transmit_vector_f tx_fn) {
   rmt_instance->tx_fn = tx_fn;
+}
+
+void rmt_cleanup(void) {
+  portmgr_cleanup();
+  pktgen_cleanup();
+
 }

@@ -29,6 +29,7 @@ limitations under the License.
 #include "metadata_recirc.h"
 #include "metadata_utils.h"
 #include "checksums.h"
+#include "pg_int.h"
 
 #define INGRESS_CB_SIZE 1024
 
@@ -51,13 +52,14 @@ static void ingress_cloning(pipeline_t *pipeline, ingress_pkt_t *i_pkt) {
   metadata_set_eg_mcast_group(metadata, 0);
 //:: #endif
   queuing_receive(metadata,
-		  metadata_recirc_digest(pipeline->phv->metadata_recirc),
-  		  i_pkt->pkt.pkt_data, i_pkt->pkt.pkt_len, i_pkt->pkt.pkt_id,
-		  PKT_INSTANCE_TYPE_INGRESS_CLONE);
+                  metadata_recirc_digest(pipeline->phv->metadata_recirc),
+                  i_pkt->pkt.pkt_data, i_pkt->pkt.pkt_len, i_pkt->pkt.pkt_id,
+                  PKT_INSTANCE_TYPE_INGRESS_CLONE);
 }
 
 static inline void set_standard_metadata(pipeline_t *pipeline,
-					 ingress_pkt_t *i_pkt) {
+                                         ingress_pkt_t *i_pkt) {
+
   fields_set_ingress_port(pipeline->phv, i_pkt->ingress);
   fields_set_packet_length(pipeline->phv, i_pkt->pkt.pkt_len);
   fields_set_instance_type(pipeline->phv, i_pkt->pkt.instance_type);
@@ -200,9 +202,14 @@ int ingress_pipeline_receive(int ingress,
 			     void *pkt, int len, uint64_t packet_id,
 			     pkt_instance_type_t instance_type) {
   pipeline_t *pipeline = ingress_pipeline_instances[ingress %
-						    NB_THREADS_PER_PIPELINE];
-  
-  ingress_pkt_t *i_pkt = malloc(sizeof(ingress_pkt_t));
+					    NB_THREADS_PER_PIPELINE];
+
+   ingress_pkt_t *i_pkt = NULL;
+   if (instance_type == PKT_INSTANCE_TYPE_INGRESS_RECIRC) {
+     pktgen_snoop_recirc(ingress >> LOCAL_PORT_BITS, ingress & LOCAL_PORT_MASK, pkt, len);
+   }
+
+  i_pkt = malloc(sizeof(ingress_pkt_t));
   buffered_pkt_t *b_pkt = &i_pkt->pkt;
   i_pkt->ingress = ingress;
   i_pkt->metadata = metadata;

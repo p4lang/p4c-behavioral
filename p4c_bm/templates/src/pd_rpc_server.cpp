@@ -5,6 +5,7 @@
 //:: api_prefix = p4_prefix + "_"
 
 #include <stdlib.h>
+#include <iostream>
 #include "p4_sim/pd_rpc_server.h"
 #include <thrift/protocol/TBinaryProtocol.h>
 #include <thrift/server/TThreadedServer.h>
@@ -21,6 +22,7 @@ using boost::shared_ptr;
 
 #include "conn_mgr_pd_rpc_server.ipp"
 #include "mc_pd_rpc_server.ipp"
+#include "devport_mgr_pd_rpc_server.ipp"
 #include "p4_pd_rpc_server.ipp"
 
 /*
@@ -31,6 +33,7 @@ static void *rpc_server_thread(void *arg) {
     int port = *(int *) arg;
 
     shared_ptr<${p4_prefix}Handler> ${p4_prefix}_handler(new ${p4_prefix}Handler());
+    shared_ptr<devport_mgrHandler> devport_mgr_handler(new devport_mgrHandler());
     shared_ptr<mcHandler> mc_handler(new mcHandler());
     shared_ptr<conn_mgrHandler> conn_mgr_handler(new conn_mgrHandler());
 
@@ -40,6 +43,10 @@ static void *rpc_server_thread(void *arg) {
 	shared_ptr<TProcessor>(new ${p4_prefix}Processor(${p4_prefix}_handler))
     );
     processor->registerProcessor(
+        "devport_mgr",
+        shared_ptr<TProcessor>(new devport_mgrProcessor(devport_mgr_handler))
+    );
+    processor->registerProcessor(
         "mc",
 	shared_ptr<TProcessor>(new mcProcessor(mc_handler))
     );
@@ -47,7 +54,6 @@ static void *rpc_server_thread(void *arg) {
         "conn_mgr",
 	shared_ptr<TProcessor>(new conn_mgrProcessor(conn_mgr_handler))
     );
-
     shared_ptr<TServerTransport> serverTransport(new TServerSocket(port));
     shared_ptr<TTransportFactory> transportFactory(new TBufferedTransportFactory());
     shared_ptr<TProtocolFactory> protocolFactory(new TBinaryProtocolFactory());

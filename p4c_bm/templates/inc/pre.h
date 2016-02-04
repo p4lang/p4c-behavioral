@@ -23,9 +23,15 @@ limitations under the License.
 
 #define PRE_MGID_MAX 16384
 #define PRE_PORTS_MAX 256
+#define PRE_LAG_MAX 256
 #define PRE_L1_NODE_MAX 16384
 #define PRE_L2_NODE_MAX 4096
-#define PRE_LAG_MAX 256
+
+typedef enum l1_node_type_ {
+    L1_NODE_TYPE_RID = 1,
+    L1_NODE_TYPE_RID_XID = 2,
+    L1_NODE_TYPE_RID_NO_NEXT = 3,
+} l1_node_type_t;
 
 typedef uint16_t mgrp_id_t;
 typedef uint16_t mgrp_rid_t;
