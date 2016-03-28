@@ -314,8 +314,10 @@ def render_dict_populate_fields(render_dict, hlir, meta_config_json):
     render_dict["pre_metadata_name_map"] = pre_metadata_name_map
 
     render_dict["extra_metadata_name_map"] = {}
+    extra_metadata_name_map = {}
     if "extra_metadata" in config["meta_mappings"]:
         render_dict["extra_metadata_name_map"] = config["meta_mappings"]["extra_metadata"]
+        extra_metadata_name_map = config["meta_mappings"]["extra_metadata"]
 
     # Calculate offsets for metadata entries
     offset = 0
@@ -334,13 +336,14 @@ def render_dict_populate_fields(render_dict, hlir, meta_config_json):
                 elif field in pre_metadata_name_map.values():
                     num_pre_metadata += 1
                     metadata_offsets[field] = offset
+                elif field in extra_metadata_name_map.values():
+                    metadata_offsets[field] = offset
                 offset += render_dict["field_info"][field]["byte_width_phv"]
     enable_intrinsic = 1 if len(intrinsic_metadata_name_map) == num_intrinsic_metadata else 0
     enable_pre = 1 if len(pre_metadata_name_map) == num_pre_metadata else 0
     render_dict["metadata_offsets"] = metadata_offsets
     render_dict["enable_intrinsic"] = enable_intrinsic
     render_dict["enable_pre"] = enable_pre
-
 
 def render_dict_populate_data_types(render_dict, hlir):
     render_dict["field_data_types"] = ["uint32_t", "byte_buf_t"]
@@ -925,7 +928,7 @@ def render_dict_populate_field_lists(render_dict, hlir):
                         if type(arg) is p4.p4_field_list:
                             field_list_object = arg
 
-                            field_instances = OrderedDict() 
+                            field_instances = OrderedDict()
                             for field_instance in [x[1] for x in field_lists[field_list_object.name]]:
                                 # This is a map. The value is always None.
                                 field_instances[field_instance] = None
@@ -1208,8 +1211,10 @@ def gen_file_lists(current_dir, gen_dir, public_inc_path):
             files_out.append((template_file, target_file))
     return files_out
 
-def render_all_files(render_dict, gen_dir, with_thrift = False, with_plugin_list=[]):
-    files = gen_file_lists(templates_dir, gen_dir, render_dict["public_inc_path"])
+def render_all_files(render_dict, gen_dir, with_thrift = False,
+        with_plugin_list=[], with_plugin_path=None):
+    files = gen_file_lists(templates_dir, gen_dir,
+        render_dict["public_inc_path"])
     for template, target in files:
         # not very robust
         if (not with_thrift) and ("thrift" in target):
@@ -1222,8 +1227,12 @@ def render_all_files(render_dict, gen_dir, with_thrift = False, with_plugin_list
                             prefix = gl.tenjin_prefix)
     if len(with_plugin_list) > 0:
         for s in with_plugin_list:
-            plugin_dir =  plugin_base + s
-            plugin_files = gen_file_lists(plugin_dir, gen_dir+'/plugin/'+s, render_dict["public_inc_path"])
+            if with_plugin_path:
+                plugin_dir = os.path.join(with_plugin_path, '') + s
+            else:
+                plugin_dir =  plugin_base + s
+            plugin_files = gen_file_lists(plugin_dir, gen_dir+'/plugin/'+s,
+                render_dict["public_inc_path"])
             for template, target in plugin_files:
                 path = os.path.dirname(target)
                 if not os.path.exists(path):
