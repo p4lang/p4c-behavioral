@@ -314,8 +314,10 @@ def render_dict_populate_fields(render_dict, hlir, meta_config_json):
     render_dict["pre_metadata_name_map"] = pre_metadata_name_map
 
     render_dict["extra_metadata_name_map"] = {}
+    extra_metadata_name_map = {}
     if "extra_metadata" in config["meta_mappings"]:
         render_dict["extra_metadata_name_map"] = config["meta_mappings"]["extra_metadata"]
+        extra_metadata_name_map = config["meta_mappings"]["extra_metadata"]
 
     # Calculate offsets for metadata entries
     offset = 0
@@ -333,6 +335,8 @@ def render_dict_populate_fields(render_dict, hlir, meta_config_json):
                     metadata_offsets[field] = offset
                 elif field in pre_metadata_name_map.values():
                     num_pre_metadata += 1
+                    metadata_offsets[field] = offset
+                elif field in extra_metadata_name_map.values():
                     metadata_offsets[field] = offset
                 offset += render_dict["field_info"][field]["byte_width_phv"]
     enable_intrinsic = 1 if len(intrinsic_metadata_name_map) == num_intrinsic_metadata else 0

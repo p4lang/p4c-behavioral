@@ -94,8 +94,8 @@ typedef struct ${p4_pd_prefix}${table}_match_spec {
 
 //::     continue
 //::   #endif
-//::   action_params = gen_action_params(a_info["param_names"],
-//::                                     a_info["param_byte_widths"])
+//::   byte_widths = [(bw + 7) / 8 for bw in a_info["param_bit_widths"]]
+//::   action_params = gen_action_params(a_info["param_names"], byte_widths)
 typedef struct ${p4_pd_prefix}${action}_action_spec {
 //::   for name, width in action_params:
 //::     if width > 4:
@@ -134,6 +134,17 @@ typedef struct ${p4_pd_prefix}${action}_action_spec {
 //::     if t_info["support_timeout"]:
 //::       params += ["uint32_t ttl"]
 //::     #endif
+//::     # direct parameter specs
+//::     for meter, m_info in meter_info.items():
+//::       binding = m_info["binding"]
+//::       if binding[0] == "direct" and binding[1] == table:
+//::         if m_info["type_"] == "bytes":
+//::           params += ["p4_pd_bytes_meter_spec_t *" + meter + "_spec"]
+//::         elif m_info["type_"] == "packets":
+//::           params += ["p4_pd_packets_meter_spec_t *" + meter + "_spec"]
+//::         #endif
+//::       #endif
+//::     #endfor
 //::     params += ["p4_pd_entry_hdl_t *entry_hdl"]
 //::     param_str = ",\n ".join(params)
 //::     name = p4_pd_prefix + table + "_table_add_with_" + action
@@ -196,6 +207,17 @@ ${name}
 //::     if has_action_spec:
 //::       params += [p4_pd_prefix + action + "_action_spec_t *action_spec"]
 //::     #endif
+//::     # direct parameter specs
+//::     for meter, m_info in meter_info.items():
+//::       binding = m_info["binding"]
+//::       if binding[0] == "direct" and binding[1] == table:
+//::         if m_info["type_"] == "bytes":
+//::           params += ["p4_pd_bytes_meter_spec_t *" + meter + "_spec"]
+//::         elif m_info["type_"] == "packets":
+//::           params += ["p4_pd_packets_meter_spec_t *" + meter + "_spec"]
+//::         #endif
+//::       #endif
+//::     #endfor
 //::     param_str = ",\n ".join(params)
 //::     name = p4_pd_prefix + table + "_table_modify_with_" + action
 /**
@@ -231,6 +253,16 @@ ${name}
 //::     if has_action_spec:
 //::       params += [p4_pd_prefix + action + "_action_spec_t *action_spec"]
 //::     #endif
+//::     for meter, m_info in meter_info.items():
+//::       binding = m_info["binding"]
+//::       if binding[0] == "direct" and binding[1] == table:
+//::         if m_info["type_"] == "bytes":
+//::           params += ["p4_pd_bytes_meter_spec_t *" + meter + "_spec"]
+//::         elif m_info["type_"] == "packets":
+//::           params += ["p4_pd_packets_meter_spec_t *" + meter + "_spec"]
+//::         #endif
+//::       #endif
+//::     #endfor
 //::     params += ["p4_pd_entry_hdl_t *entry_hdl"]
 //::     param_str = ",\n ".join(params)
 /**
@@ -392,6 +424,17 @@ ${name}
 //::   if match_type == "ternary":
 //::     params += ["int priority"]
 //::   #endif
+//::   # direct parameter specs
+//::   for meter, m_info in meter_info.items():
+//::     binding = m_info["binding"]
+//::     if binding[0] == "direct" and binding[1] == table:
+//::       if m_info["type_"] == "bytes":
+//::         params += ["p4_pd_bytes_meter_spec_t *" + meter + "_spec"]
+//::       elif m_info["type_"] == "packets":
+//::         params += ["p4_pd_packets_meter_spec_t *" + meter + "_spec"]
+//::       #endif
+//::     #endif
+//::   #endfor
 //::   params_wo = params + ["p4_pd_mbr_hdl_t mbr_hdl", "p4_pd_entry_hdl_t *entry_hdl"]
 //::   param_str = ",\n ".join(params_wo)
 //::   name = p4_pd_prefix + table + "_add_entry"
@@ -402,7 +445,19 @@ ${name}
 );
 
 //::   if not has_selector: continue
-//::   params_w = params + ["p4_pd_grp_hdl_t grp_hdl", "p4_pd_entry_hdl_t *entry_hdl"]
+//::   params_w = params + ["p4_pd_grp_hdl_t grp_hdl"]
+//::   # direct parameter specs
+//::   for meter, m_info in meter_info.items():
+//::     binding = m_info["binding"]
+//::     if binding[0] == "direct" and binding[1] == table:
+//::       if m_info["type_"] == "bytes":
+//::         params += ["p4_pd_bytes_meter_spec_t *" + meter + "_spec"]
+//::       elif m_info["type_"] == "packets":
+//::         params += ["p4_pd_packets_meter_spec_t *" + meter + "_spec"]
+//::       #endif
+//::     #endif
+//::   #endfor
+//::   params_w += ["p4_pd_entry_hdl_t *entry_hdl"]
 //::   param_str = ",\n ".join(params_w)
 //::   name = p4_pd_prefix + table + "_add_entry_with_selector"
 p4_pd_status_t
@@ -618,6 +673,7 @@ ${name}
 
 /* METERS */
 
+
 //:: for meter, m_info in meter_info.items():
 //::   binding = m_info["binding"]
 //::   type_ = m_info["type_"]
@@ -631,26 +687,12 @@ ${name}
 //::     params += ["int index"]
 //::   #endif
 //::   if type_ == "packets":
-//::     params += ["uint32_t cir_pps", "uint32_t cburst_pkts",
-//::                "uint32_t pir_pps", "uint32_t pburst_pkts"]
+//::     params += ["p4_pd_packets_meter_spec_t *meter_spec"]
 //::   else:
-//::     params += ["uint32_t cir_kbps", "uint32_t cburst_kbits",
-//::                "uint32_t pir_kbps", "uint32_t pburst_kbits"]
+//::     params += ["p4_pd_bytes_meter_spec_t *meter_spec"]
 //::   #endif
 //::   param_str = ",\n ".join(params)
-//::   
-//::   if binding[0] == "direct":
-//::     table = binding[1]
-//::     name = "p4_pd_" + p4_prefix + "_" + table + "_configure_meter_entry"
-p4_pd_status_t
-${name}
-(
- ${param_str}
-);
-
-//::   #endif
-//::
-//::   name = "p4_pd_" + p4_prefix + "_meter_configure_" + meter
+//::   name = "p4_pd_" + p4_prefix + "_meter_set_" + meter
 p4_pd_status_t
 ${name}
 (

@@ -63,6 +63,7 @@ int stateful_meter_set_queue(meter_t *meter, int index,
 			     double info_rate, uint32_t burst_size,
 			     meter_color_t color);
 meter_color_t stateful_execute_meter(meter_t *meter, int index, uint32_t input);
+int32_t stateful_meter_set_meter_time(int32_t meter_time_disable);
 
 void stateful_init_registers(reg_t *reg, size_t num_instances, size_t byte_width);
 

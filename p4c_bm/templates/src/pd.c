@@ -198,8 +198,8 @@ static inline void build_key_${table}
 
 //:: for action, a_info in action_info.items():
 //::   if not a_info["param_names"]: continue
-//::   action_params = gen_action_params(a_info["param_names"],
-//::                                     a_info["param_byte_widths"])
+//::   byte_widths = [(bw + 7) / 8 for bw in a_info["param_bit_widths"]]
+//::   action_params = gen_action_params(a_info["param_names"], byte_widths)
 static inline void build_action_spec_${action}
 (
  uint8_t *data,
@@ -236,6 +236,62 @@ static inline void build_action_spec_${action}
 
 //:: #endfor
 
+static p4_pd_status_t
+p4_pd_configure_packets_meter
+(
+ meter_t *meter,
+ int index,
+ p4_pd_packets_meter_spec_t *meter_spec
+)
+{
+  int rv = 0;
+  double info_rate;
+  uint32_t burst_size;
+
+  info_rate = (double) meter_spec->cir_pps / 1000000.;
+  burst_size = meter_spec->cburst_pkts;
+
+  rv |= stateful_meter_set_queue(meter, index,
+				     info_rate, burst_size,
+				     METER_EXCEED_ACTION_COLOR_GREEN);
+
+  info_rate = (double) meter_spec->pir_pps / 1000000.;
+  burst_size = meter_spec->pburst_pkts;
+
+  rv |= stateful_meter_set_queue(meter, index,
+				     info_rate, burst_size,
+				     METER_EXCEED_ACTION_COLOR_YELLOW);
+  return rv;
+}
+
+static p4_pd_status_t
+p4_pd_configure_bytes_meter
+(
+ meter_t *meter,
+ int index,
+ p4_pd_bytes_meter_spec_t *meter_spec
+)
+{
+  int rv = 0;
+  double info_rate;
+  uint32_t burst_size;
+
+  info_rate = (double) meter_spec->cir_kbps / 1000000.;
+  burst_size = (meter_spec->cburst_kbits * 1000)/8;
+
+  rv |= stateful_meter_set_queue(meter, index,
+				     info_rate, burst_size,
+				     METER_EXCEED_ACTION_COLOR_GREEN);
+
+  info_rate = (double) meter_spec->pir_kbps / 1000000.;
+  burst_size = (meter_spec->pburst_kbits * 1000)/8;
+
+  rv |= stateful_meter_set_queue(meter, index,
+				     info_rate, burst_size,
+				     METER_EXCEED_ACTION_COLOR_YELLOW);
+  return rv;
+}
+
 /* ADD ENTRIES */
 
 //:: for table, t_info in table_info.items():
@@ -260,6 +316,17 @@ static inline void build_action_spec_${action}
 //::     if t_info["support_timeout"]:
 //::       params += ["uint32_t ttl"]
 //::     #endif
+//::     # direct parameter specs
+//::     for meter, m_info in meter_info.items():
+//::       binding = m_info["binding"]
+//::       if binding[0] == "direct" and binding[1] == table:
+//::         if m_info["type_"] == "bytes":
+//::           params += ["p4_pd_bytes_meter_spec_t *" + meter + "_spec"]
+//::         elif m_info["type_"] == "packets":
+//::           params += ["p4_pd_packets_meter_spec_t *" + meter + "_spec"]
+//::         #endif
+//::       #endif
+//::     #endfor
 //::     params += ["p4_pd_entry_hdl_t *entry_hdl"]
 //::     param_str = ",\n ".join(params)
 //::     name = p4_pd_prefix + table + "_table_add_with_" + action
@@ -330,6 +397,22 @@ ${name}
 
   int rv = tables_add_entry_${table}(&entry);
   *entry_hdl = rv;
+//::     for meter, m_info in meter_info.items():
+//::       binding = m_info["binding"]
+//::       if binding[0] == "direct" and binding[1] == table:
+//::         if m_info["type_"] == "bytes":
+  if (rv < 0) return (rv < 0);
+  rv = p4_pd_configure_bytes_meter(&meter_${meter},
+                                   (int) *entry_hdl,
+                                   ${meter}_spec);
+//::         elif m_info["type_"] == "packets":
+  if (rv < 0) return (rv < 0);
+  rv = p4_pd_configure_packets_meter(&meter_${meter},
+                                     (int) *entry_hdl,
+                                     ${meter}_spec);
+//::         #endif
+//::       #endif
+//::     #endfor
   return (rv < 0);
 }
 
@@ -374,6 +457,17 @@ ${name}
 //::     if has_action_spec:
 //::       params += [p4_pd_prefix + action + "_action_spec_t *action_spec"]
 //::     #endif
+//::     # direct parameter specs
+//::     for meter, m_info in meter_info.items():
+//::       binding = m_info["binding"]
+//::       if binding[0] == "direct" and binding[1] == table:
+//::         if m_info["type_"] == "bytes":
+//::           params += ["p4_pd_bytes_meter_spec_t *" + meter + "_spec"]
+//::         elif m_info["type_"] == "packets":
+//::           params += ["p4_pd_packets_meter_spec_t *" + meter + "_spec"]
+//::         #endif
+//::       #endif
+//::     #endfor
 //::     param_str = ",\n ".join(params)
 //::     name = p4_pd_prefix + table + "_table_modify_with_" + action
 /**
@@ -399,7 +493,24 @@ ${name}
 //::     #endif
 
 //::     action_idx = t_info["actions_idx"][action]
-  return tables_modify_entry_${table}(entry_hdl, ${action_idx}, _data);
+  int rv = tables_modify_entry_${table}(entry_hdl, ${action_idx}, _data);
+//::     for meter, m_info in meter_info.items():
+//::       binding = m_info["binding"]
+//::       if binding[0] == "direct" and binding[1] == table:
+//::         if m_info["type_"] == "bytes":
+  if (rv < 0) return (rv < 0);
+  rv = p4_pd_configure_bytes_meter(&meter_${meter},
+                                   (int) entry_hdl,
+                                   ${meter}_spec);
+//::         elif m_info["type_"] == "packets":
+  if (rv < 0) return (rv < 0);
+  rv = p4_pd_configure_packets_meter(&meter_${meter},
+                                     (int) entry_hdl,
+                                     ${meter}_spec);
+//::         #endif
+//::       #endif
+//::     #endfor
+  return rv;
 }
 
 //::   #endfor
@@ -420,6 +531,16 @@ ${name}
 //::     if has_action_spec:
 //::       params += [p4_pd_prefix + action + "_action_spec_t *action_spec"]
 //::     #endif
+//::     for meter, m_info in meter_info.items():
+//::       binding = m_info["binding"]
+//::       if binding[0] == "direct" and binding[1] == table:
+//::         if m_info["type_"] == "bytes":
+//::           params += ["p4_pd_bytes_meter_spec_t *" + meter + "_spec"]
+//::         elif m_info["type_"] == "packets":
+//::           params += ["p4_pd_packets_meter_spec_t *" + meter + "_spec"]
+//::         #endif
+//::       #endif
+//::     #endfor
 //::     params += ["p4_pd_entry_hdl_t *entry_hdl"]
 //::     param_str = ",\n ".join(params)
 /**
@@ -683,6 +804,17 @@ ${name}
 //::   if match_type == "ternary":
 //::     params += ["int priority"]
 //::   #endif
+//::     # direct parameter specs
+//::   for meter, m_info in meter_info.items():
+//::     binding = m_info["binding"]
+//::     if binding[0] == "direct" and binding[1] == table:
+//::       if m_info["type_"] == "bytes":
+//::         params += ["p4_pd_bytes_meter_spec_t *" + meter + "_spec"]
+//::       elif m_info["type_"] == "packets":
+//::         params += ["p4_pd_packets_meter_spec_t *" + meter + "_spec"]
+//::       #endif
+//::     #endif
+//::   #endfor
 //::   params_wo = params + ["p4_pd_mbr_hdl_t mbr_hdl", "p4_pd_entry_hdl_t *entry_hdl"]
 //::   param_str = ",\n ".join(params_wo)
 //::   name = p4_pd_prefix + table + "_add_entry"
@@ -738,11 +870,39 @@ ${name}
 
   int rv = tables_add_entry_${table}(&entry);
   *entry_hdl = rv;
+//::     for meter, m_info in meter_info.items():
+//::       binding = m_info["binding"]
+//::       if binding[0] == "direct" and binding[1] == table:
+//::         if m_info["type_"] == "bytes":
+  if (rv < 0) return (rv < 0);
+  rv = p4_pd_configure_bytes_meter(&meter_${meter},
+                                   (int) *entry_hdl,
+                                   ${meter}_spec);
+//::         elif m_info["type_"] == "packets":
+  if (rv < 0) return (rv < 0);
+  rv = p4_pd_configure_packets_meter(&meter_${meter},
+                                     (int) *entry_hdl,
+                                     ${meter}_spec);
+//::         #endif
+//::       #endif
+//::     #endfor
   return (rv < 0);
 }
 
 //::   if not has_selector: continue
-//::   params_w = params + ["p4_pd_grp_hdl_t grp_hdl", "p4_pd_entry_hdl_t *entry_hdl"]
+//::   params_w = params + ["p4_pd_grp_hdl_t grp_hdl"]
+//::   for meter, m_info in meter_info.items():
+//::     binding = m_info["binding"]
+//::     if binding[0] == "direct" and binding[1] == table:
+//::       if m_info["type_"] == "bytes":
+//::         params += ["p4_pd_bytes_meter_spec_t *" + meter + "_spec"]
+//::       elif m_info["type_"] == "packets":
+//::         params += ["p4_pd_packets_meter_spec_t *" + meter + "_spec"]
+//::       #endif
+//::     #endif
+//::   #endfor
+//::   params_wo = params + ["p4_pd_mbr_hdl_t mbr_hdl", "p4_pd_entry_hdl_t *entry_hdl"]
+//::   params_w += ["p4_pd_entry_hdl_t *entry_hdl"]
 //::   param_str = ",\n ".join(params_w)
 //::   name = p4_pd_prefix + table + "_add_entry_with_selector"
 p4_pd_status_t
@@ -798,6 +958,22 @@ ${name}
 
   int rv = tables_add_entry_${table}(&entry);
   *entry_hdl = rv;
+//::     for meter, m_info in meter_info.items():
+//::       binding = m_info["binding"]
+//::       if binding[0] == "direct" and binding[1] == table:
+//::         if m_info["type_"] == "bytes":
+  if (rv < 0) return (rv < 0);
+  rv = p4_pd_configure_bytes_meter(&meter_${meter},
+                                   (int) *entry_hdl,
+                                   ${meter}_spec);
+//::         elif m_info["type_"] == "packets":
+  if (rv < 0) return (rv < 0);
+  rv = p4_pd_configure_packets_meter(&meter_${meter},
+                                     (int) *entry_hdl,
+                                     ${meter}_spec);
+//::         #endif
+//::       #endif
+//::     #endfor
   return (rv < 0);
 }
 
@@ -1019,19 +1195,6 @@ ${name}
 //::   #endif
 //:: #endfor
 
-typedef struct {
-  p4_pd_stat_sync_cb cb_fn;
-  uint8_t dev_id;
-  void *cb_cookie;
-} sync_cb_arg_t;
-
-static void *sync_cb(void *arg) {
-  sync_cb_arg_t *cb_arg = (sync_cb_arg_t *) arg;
-  cb_arg->cb_fn(cb_arg->dev_id, cb_arg->cb_cookie);
-  free(cb_arg);
-  return NULL;
-}
-
 //:: for counter, c_info in counter_info.items():
 //::   name = "p4_pd_" + p4_prefix + "_counter_hw_sync_" + counter
 p4_pd_status_t
@@ -1043,16 +1206,7 @@ ${name}
  void *cb_cookie
  )
 {
-  pthread_t thread;
-  pthread_attr_t attr;
-  pthread_attr_init(&attr);
-  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-  sync_cb_arg_t *cb_arg = (sync_cb_arg_t *) malloc(sizeof(sync_cb_arg_t));
-  cb_arg->cb_fn = cb_fn;
-  cb_arg->dev_id = dev_tgt.device_id;
-  cb_arg->cb_cookie = cb_cookie;
-  pthread_create(&thread, &attr, sync_cb, cb_arg);
-  // I let thread go out of scope, which is okay, it is in detached state
+  cb_fn(dev_tgt.device_id, cb_cookie);
   return 0;
 }
 
@@ -1118,87 +1272,34 @@ ${name}
 //::     params += ["int index"]
 //::   #endif
 //::   if type_ == "packets":
-//::     params += ["uint32_t cir_pps", "uint32_t cburst_pkts",
-//::                "uint32_t pir_pps", "uint32_t pburst_pkts"]
+//::     params += ["p4_pd_packets_meter_spec_t *meter_spec"]
 //::   else:
-//::     params += ["uint32_t cir_kbps", "uint32_t cburst_kbits",
-//::                "uint32_t pir_kbps", "uint32_t pburst_kbits"]
+//::     params += ["p4_pd_bytes_meter_spec_t *meter_spec"]
 //::   #endif
 //::   param_str = ",\n ".join(params)
-//::
-static inline p4_pd_status_t configure_meter_${meter}
-(
- ${param_str}
-)
-{
-  p4_pd_status_t status = 1;
-  double info_rate;
-  uint32_t burst_size;
-
-//::     if type_ == "packets":
-  info_rate = (double) cir_pps / 1000000.;
-  burst_size = cburst_pkts;
-//::     else:
-  info_rate = (double) cir_kbps / 1000000.;
-  burst_size = cburst_kbits * 1000;
-//::     #endif
-  status |= stateful_meter_set_queue(&meter_${meter}, ${entry_or_index},
-				     info_rate, burst_size,
-				     METER_EXCEED_ACTION_COLOR_YELLOW);
-
-//::     if type_ == "packets":
-  info_rate = (double) pir_pps / 1000000.;
-  burst_size = pburst_pkts;
-//::     else:
-  info_rate = (double) pir_kbps / 1000000.;
-  burst_size = pburst_kbits * 1000;
-//::     #endif
-  status |= stateful_meter_set_queue(&meter_${meter}, ${entry_or_index},
-				     info_rate, burst_size,
-				     METER_EXCEED_ACTION_COLOR_RED);
-
-  return status;
-}
-
-//::   
-//::   if binding[0] == "direct":
-//::     table = binding[1]
-//::     name = "p4_pd_" + p4_prefix + "_" + table + "_configure_meter_entry"
+//::   name = "p4_pd_" + p4_prefix + "_meter_set_" + meter
 p4_pd_status_t
 ${name}
 (
  ${param_str}
 )
 {
-//::     if type_ == "packets":
-  return configure_meter_${meter}(sess_hdl, dev_tgt, ${entry_or_index},
-				  cir_pps, cburst_pkts, pir_pps, pburst_pkts);
-//::     else:
-  return configure_meter_${meter}(sess_hdl, dev_tgt, ${entry_or_index},
-				  cir_kbps, cburst_kbits, pir_kbps, pburst_kbits);
-//::     #endif
-}
+    int rv = 0;
 
-//::   #endif
-//::
-//::   name = "p4_pd_" + p4_prefix + "_meter_configure_" + meter
-p4_pd_status_t
-${name}
-(
- ${param_str}
-)
-{
 //::     if type_ == "packets":
-  return configure_meter_${meter}(sess_hdl, dev_tgt, ${entry_or_index},
-				  cir_pps, cburst_pkts, pir_pps, pburst_pkts);
+  rv = p4_pd_configure_packets_meter(&meter_${meter},
+                                        ${entry_or_index},
+                                        meter_spec);
 //::     else:
-  return configure_meter_${meter}(sess_hdl, dev_tgt, ${entry_or_index},
-				  cir_kbps, cburst_kbits, pir_kbps, pburst_kbits);
+  rv = p4_pd_configure_bytes_meter(&meter_${meter},
+                                        ${entry_or_index},
+                                        meter_spec);
 //::     #endif
+
+  return rv;
 }
 
 //:: #endfor
-
 
 /* VALUE SETS */
 

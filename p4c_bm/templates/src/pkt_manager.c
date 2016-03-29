@@ -69,7 +69,7 @@ static void *pkt_out_loop(void *arg) {
     RMT_LOG(P4_LOG_LEVEL_TRACE, "outgoing thread: packet dequeued\n");
     if(rmt_instance->tx_fn) {
       RMT_LOG(P4_LOG_LEVEL_VERBOSE,
-	      "outgoing thread: sending pkt out of port %d\n",
+	      "outgoing thread: sending pkt: Size[%u]: Port[%d]\n", b_pkt->pkt_len,
 	      t_pkt->egress);
       rmt_instance->tx_fn(t_pkt->egress, b_pkt->pkt_data, b_pkt->pkt_len);
     }

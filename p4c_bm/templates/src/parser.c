@@ -25,6 +25,7 @@ limitations under the License.
 #include "value_set.h"
 #include "metadata_recirc.h"
 
+
 typedef void (*ExtractionFn)(phv_data_t *phv, uint8_t *hdr);
 
 /* An extract function is defined for each header instance. */
@@ -385,6 +386,7 @@ static uint8_t *parser_extract_metadata(phv_data_t *phv, uint8_t *pkt,
 ApplyTableFn parser_parse_pkt(phv_data_t *phv, 
 			      uint8_t *pkt, int len,
 			      ParseStateFn start){
+  phv->payload = pkt;
   ApplyTableFn apply_table_fn = start(phv, pkt);
   phv->payload_len = len - (phv->payload - pkt);
   RMT_LOG(P4_LOG_LEVEL_VERBOSE, "payload length: %d\n", phv->payload_len);

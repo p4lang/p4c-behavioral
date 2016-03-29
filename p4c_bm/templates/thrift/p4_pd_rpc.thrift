@@ -34,6 +34,21 @@ struct ${api_prefix}counter_value_t {
   2: required i64 bytes;
 }
 
+struct ${api_prefix}packets_meter_spec_t {
+  1: required i32 cir_pps;
+  2: required i32 cburst_pkts;
+  3: required i32 pir_pps;
+  4: required i32 pburst_pkts;
+  5: required bool color_aware;
+}
+
+struct ${api_prefix}bytes_meter_spec_t {
+  1: required i32 cir_kbps;
+  2: required i32 cburst_kbits;
+  3: required i32 pir_kbps;
+  4: required i32 pburst_kbits;
+  5: required bool color_aware;
+}
 
 //:: # match_fields is list of tuples (name, type)
 //:: def gen_match_params(match_fields, field_info):
@@ -92,8 +107,8 @@ struct ${api_prefix}${table}_match_spec_t {
 //::   if not a_info["param_names"]:
 //::     continue
 //::   #endif
-//::   action_params = gen_action_params(a_info["param_names"],
-//::                                     a_info["param_byte_widths"])
+//::   byte_widths = [(bw + 7) / 8 for bw in a_info["param_bit_widths"]]
+//::   action_params = gen_action_params(a_info["param_names"], byte_widths)
 struct ${api_prefix}${action}_action_spec_t {
 //::   id = 1
 //::   for name, width in action_params:
@@ -155,6 +170,17 @@ service ${p4_prefix} {
 //::     if t_info["support_timeout"]:
 //::       params += ["i32 ttl"]
 //::     #endif
+//::     # direct parameter specs
+//::     for meter, m_info in meter_info.items():
+//::       binding = m_info["binding"]
+//::       if binding[0] == "direct" and binding[1] == table:
+//::         if m_info["type_"] == "bytes":
+//::           params += [api_prefix + "bytes_meter_spec_t " + meter + "_spec"]
+//::         elif m_info["type_"] == "packets":
+//::           params += [api_prefix + "packets_meter_spec_t " + meter + "_spec"]
+//::         #endif
+//::       #endif
+//::     #endfor
 //::     param_list = [str(count + 1) + ":" + p for count, p in enumerate(params)]
 //::     param_str = ", ".join(param_list)
 //::     name = table + "_table_add_with_" + action
@@ -176,6 +202,17 @@ service ${p4_prefix} {
 //::     if has_action_spec:
 //::       params += [api_prefix + action + "_action_spec_t action_spec"]
 //::     #endif
+//::     # direct parameter specs
+//::     for meter, m_info in meter_info.items():
+//::       binding = m_info["binding"]
+//::       if binding[0] == "direct" and binding[1] == table:
+//::         if m_info["type_"] == "bytes":
+//::           params += [api_prefix + "bytes_meter_spec_t " + meter + "_spec"]
+//::         elif m_info["type_"] == "packets":
+//::           params += [api_prefix + "packets_meter_spec_t " + meter + "_spec"]
+//::         #endif
+//::       #endif
+//::     #endfor
 //::     param_list = [str(count + 1) + ":" + p for count, p in enumerate(params)]
 //::     param_str = ", ".join(param_list)
 //::     name = table + "_table_modify_with_" + action
@@ -213,7 +250,8 @@ service ${p4_prefix} {
 //::   name = table + "_get_entry"
 //::   params = ["res.SessionHandle_t sess_hdl",
 //::             "byte dev_id",
-//::             "EntryHandle_t entry_hdl"]
+//::             "EntryHandle_t entry_hdl",
+//::             "bool read_from_hw"]
 //::   param_list = [str(count + 1) + ":" + p for count, p in enumerate(params)]
 //::   param_str = ", ".join(param_list)
     binary ${name}(${param_str});
@@ -233,6 +271,17 @@ service ${p4_prefix} {
 //::     if has_action_spec:
 //::       params += [api_prefix + action + "_action_spec_t action_spec"]
 //::     #endif
+//::     # direct parameter specs
+//::     for meter, m_info in meter_info.items():
+//::       binding = m_info["binding"]
+//::       if binding[0] == "direct" and binding[1] == table:
+//::         if m_info["type_"] == "bytes":
+//::           params += [api_prefix + "bytes_meter_spec_t " + meter + "_spec"]
+//::         elif m_info["type_"] == "packets":
+//::           params += [api_prefix + "packets_meter_spec_t " + meter + "_spec"]
+//::         #endif
+//::       #endif
+//::     #endfor
 //::     param_list = [str(count + 1) + ":" + p for count, p in enumerate(params)]
 //::     param_str = ", ".join(param_list)
     EntryHandle_t ${name}(${param_str});
@@ -351,6 +400,17 @@ service ${p4_prefix} {
 //::     params += ["i32 priority"]
 //::   #endif
 //::   params_wo = params + ["MemberHandle_t mbr"]
+//::   # direct parameter specs
+//::   for meter, m_info in meter_info.items():
+//::     binding = m_info["binding"]
+//::     if binding[0] == "direct" and binding[1] == table:
+//::       if m_info["type_"] == "bytes":
+//::         params += [api_prefix + "bytes_meter_spec_t " + meter + "_spec"]
+//::       elif m_info["type_"] == "packets":
+//::         params += [api_prefix + "packets_meter_spec_t " + meter + "_spec"]
+//::       #endif
+//::     #endif
+//::   #endfor
 //::   param_list = [str(count + 1) + ":" + p for count, p in enumerate(params_wo)]
 //::   param_str = ", ".join(param_list)
 //::   name = table + "_add_entry"
@@ -358,6 +418,17 @@ service ${p4_prefix} {
 //::
 //::   if not has_selector: continue
 //::   params_w = params + ["GroupHandle_t grp"]
+//::   # direct parameter specs
+//::   for meter, m_info in meter_info.items():
+//::     binding = m_info["binding"]
+//::     if binding[0] == "direct" and binding[1] == table:
+//::       if m_info["type_"] == "bytes":
+//::         params += [api_prefix + "bytes_meter_spec_t " + meter + "_spec"]
+//::       elif m_info["type_"] == "packets":
+//::         params += [api_prefix + "packets_meter_spec_t " + meter + "_spec"]
+//::       #endif
+//::     #endif
+//::   #endfor
 //::   param_list = [str(count + 1) + ":" + p for count, p in enumerate(params_w)]
 //::   param_str = ", ".join(param_list)
 //::   name = table + "_add_entry_with_selector"
@@ -446,33 +517,21 @@ service ${p4_prefix} {
 //:: for meter, m_info in meter_info.items():
 //::   binding = m_info["binding"]
 //::   type_ = m_info["type_"]
-//::   params = ["res.SessionHandle_t sess_hdl",
-//::             "res.DevTarget_t dev_tgt"]
+//::   params = ["1:res.SessionHandle_t sess_hdl",
+//::             "2:res.DevTarget_t dev_tgt"]
 //::   if binding[0] == "direct":
-//::     entry_or_index = "entry";
-//::     params += ["EntryHandle_t entry"]
+//::     params += ["3:EntryHandle_t entry"]
 //::   else:
-//::     entry_or_index = "index";
-//::     params += ["i32 index"]
+//::     params += ["3:i32 index"]
 //::   #endif
 //::   if type_ == "packets":
-//::     params += ["i32 cir_pps", "i32 cburst_pkts",
-//::                "i32 pir_pps", "i32 pburst_pkts"]
+//::     params += ["4:" + api_prefix + "packets_meter_spec_t meter_spec"]
 //::   else:
-//::     params += ["i32 cir_kbps", "i32 cburst_kbits",
-//::                "i32 pir_kbps", "i32 pburst_kbits"]
-//::   #endif
-//::   param_list = [str(count + 1) + ":" + p for count, p in enumerate(params)]
-//::   param_str = ", ".join(param_list)
-//::   
-//::   if binding[0] == "direct":
-//::     table = binding[1]
-//::     name = table + "_configure_meter_entry"
-    i32 ${name}(${param_str});
-
+//::     params += ["4:" + api_prefix + "bytes_meter_spec_t meter_spec"]
 //::   #endif
 //::
-//::   name = "meter_configure_" + meter
+//::   param_str = ", ".join(params)
+//::   name = "meter_set_" + meter
     i32 ${name}(${param_str});
 
 //:: #endfor
