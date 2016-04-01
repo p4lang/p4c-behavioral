@@ -927,7 +927,6 @@ def render_dict_populate_field_lists(render_dict, hlir):
                     for arg in call[1]:
                         if type(arg) is p4.p4_field_list:
                             field_list_object = arg
-
                             field_instances = OrderedDict()
                             for field_instance in [x[1] for x in field_lists[field_list_object.name]]:
                                 # This is a map. The value is always None.
@@ -1211,8 +1210,10 @@ def gen_file_lists(current_dir, gen_dir, public_inc_path):
             files_out.append((template_file, target_file))
     return files_out
 
-def render_all_files(render_dict, gen_dir, with_thrift = False, with_plugin_list=[]):
-    files = gen_file_lists(templates_dir, gen_dir, render_dict["public_inc_path"])
+def render_all_files(render_dict, gen_dir, with_thrift = False,
+        with_plugin_list=[], with_plugin_path=None):
+    files = gen_file_lists(templates_dir, gen_dir,
+        render_dict["public_inc_path"])
     for template, target in files:
         # not very robust
         if (not with_thrift) and ("thrift" in target):
@@ -1225,8 +1226,13 @@ def render_all_files(render_dict, gen_dir, with_thrift = False, with_plugin_list
                             prefix = gl.tenjin_prefix)
     if len(with_plugin_list) > 0:
         for s in with_plugin_list:
-            plugin_dir =  plugin_base + s
-            plugin_files = gen_file_lists(plugin_dir, gen_dir+'/plugin/'+s, render_dict["public_inc_path"])
+            if with_plugin_path:
+                plugin_dir = os.path.join(with_plugin_path, s)
+            else:
+                plugin_dir = os.path.join(plugin_base, s)
+            plugin_files = gen_file_lists(plugin_dir,
+                os.path.join(gen_dir, 'plugin', s),
+                render_dict["public_inc_path"])
             for template, target in plugin_files:
                 path = os.path.dirname(target)
                 if not os.path.exists(path):
