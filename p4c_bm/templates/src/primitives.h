@@ -231,6 +231,19 @@ MODIFY_FIELD_WITH_HASH_BASED_OFFSET(phv_data_t *phv,
 		       (uint8_t *) &index, sizeof(uint32_t),
 		       mask_ptr, mask_len);
 }
+
+static inline void
+MODIFY_FIELD_RNG_UNIFORM(phv_data_t *phv,
+                         rmt_field_instance_t dst, int dst_len,
+                         uint8_t *begin, uint8_t *end,
+                         uint8_t *mask_ptr, int mask_len) {
+  uint32_t spread = *(uint32_t *) end - *(uint32_t *) begin + 1;
+  uint32_t v = ((uint32_t) rand()) % spread + *(uint32_t *) end;
+  MODIFY_FIELD_GENERIC(phv,
+		       dst, dst_len,
+		       (uint8_t *) &v, sizeof(uint32_t),
+		       mask_ptr, mask_len);
+}
 				    
 
 /* TODO Leo: temporary function with default behavior before Leo comes back and

@@ -196,6 +196,18 @@ void action_${action_name} (phv_data_t *phv, void *action_data) {
 				      ${format_arg(action, args[2])},
 				      ${format_arg(action, args[3])},
 				      ${mask_str}, ${mask_bytes});
+//::        elif call[0] == "MODIFY_FIELD_RNG_UNIFORM":
+//::            dst = args[0][1]
+//::            dst_bytes = field_info[dst]["byte_width_phv"]
+//::            mask = [255 for i in xrange(dst_bytes)]
+//::            mask_str = format_arg(action, ("immediate", mask))
+//::            mask_bytes = dst_bytes
+  MODIFY_FIELD_RNG_UNIFORM(phv,
+                           ${format_arg(action, args[0])},
+                           ${dst_bytes},
+                           ${format_arg(action, args[1])},
+                           ${format_arg(action, args[2])},
+                           ${mask_str}, ${mask_bytes});
 //::        elif call[0] == "ADD_TO_FIELD":
 //::            dst = args[0][1]
 //::            dst_bytes = field_info[dst]["byte_width_phv"]
