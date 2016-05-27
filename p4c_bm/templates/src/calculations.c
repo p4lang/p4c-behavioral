@@ -112,7 +112,7 @@ void calculations_${name}(phv_data_t *phv, uint8_t *result) {
 //::   width = c_info["output_width"]
 //::   if width < 32:
 //::     shift = 8 * bytes_output - width
-  *(uint32_t *) result = htonl(ntohl(*(uint32_t *) result) >> ${shift});
+  *(uint32_t *) result = htonl((*(uint32_t *) result) & ((1 << ${shift})-1));
 //::   #endif
 }
 

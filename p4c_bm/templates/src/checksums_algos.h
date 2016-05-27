@@ -71,7 +71,7 @@ static inline void csum16(uint8_t *buf, int len, uint8_t *result) {
   t3 += t4;
   if (t3 < t4) t3++;
   
-  *(uint32_t *) result =  ~t3;
+  *(uint16_t *) result = ntohs(~t3);
 }
 
 static inline void csum16_slow(uint8_t *buf, int len, uint8_t *result) {
@@ -90,7 +90,7 @@ static inline void csum16_slow(uint8_t *buf, int len, uint8_t *result) {
   while(sum >> 16)
     sum = (sum >> 16) + (sum & 0xFFFF);
 
-  *(uint32_t *) result = (uint16_t) (~sum); 
+  *(uint16_t *) result = htons((uint16_t) (~sum));
 }
 
 static inline void xor16(uint8_t *buf, int len, uint8_t *result) {
