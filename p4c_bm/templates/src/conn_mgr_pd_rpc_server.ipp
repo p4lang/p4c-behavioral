@@ -41,11 +41,11 @@ public:
 
 //:: name = "client_init"
 //:: pd_name = pd_static_prefix + name
-  SessionHandle_t ${name}(const int32_t max_txn_size){
+  SessionHandle_t ${name}(){
     std::cerr << "In ${name}\n";
     
     p4_pd_sess_hdl_t sess_hdl;
-    ${pd_name}(&sess_hdl, max_txn_size);
+    ${pd_name}(&sess_hdl);
     return sess_hdl;
   }
 
