@@ -40,7 +40,7 @@ p4_pd_cleanup(void) {
 }
 
 p4_pd_status_t
-p4_pd_client_init(p4_pd_sess_hdl_t *sess_hdl, uint32_t max_txn_size) {
+p4_pd_client_init(p4_pd_sess_hdl_t *sess_hdl) {
   pthread_mutex_lock(&lock);
 
   int Rc_int;

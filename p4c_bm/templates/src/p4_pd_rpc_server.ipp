@@ -997,13 +997,13 @@ public:
 //:: name = "mirroring_mapping_add"
   int32_t ${name}(const int32_t mirror_id, const int32_t egress_port) {
       std::cerr << "In ${name}\n";
-      return ${pd_prefix}${name}(mirror_id, egress_port);
+      return p4_pd_${name}(mirror_id, egress_port);
   }
 
 //:: name = "mirroring_mapping_delete"
   int32_t ${name}(const int32_t mirror_id) {
       std::cerr << "In ${name}\n";
-      return ${pd_prefix}${name}(mirror_id);
+      return p4_pd_${name}(mirror_id);
   }
 
 //:: name = "set_drop_tail_thr"
@@ -1021,7 +1021,7 @@ public:
 //:: name = "mirroring_mapping_get_egress_port"
   int32_t ${name}(int32_t mirror_id) {
       std::cerr << "In ${name}\n";
-      return ${pd_prefix}${name}(mirror_id);
+      return p4_pd_${name}(mirror_id);
   }
 
   // coalescing api
@@ -1029,13 +1029,13 @@ public:
 //:: name = "mirroring_set_coalescing_sessions_offset"
   int32_t ${name}(const int16_t coalescing_sessions_offset) {
       std::cerr << "In ${name}\n";
-      return ${pd_prefix}${name}(coalescing_sessions_offset);
+      return p4_pd_${name}(coalescing_sessions_offset);
   }
 
 //:: name = "mirroring_add_coalescing_session"
   int32_t ${name}(const int32_t mirror_id, const int32_t egress_port, const std::vector<int8_t> &header, const int16_t min_pkt_size, const int8_t timeout){
       std::cerr << "In ${name}\n";
-      return ${pd_prefix}${name}(mirror_id, egress_port, &header[0], (const int8_t)header.size(), min_pkt_size, timeout);
+      return p4_pd_${name}(mirror_id, egress_port, &header[0], (const int8_t)header.size(), min_pkt_size, timeout);
   }
 
   void set_learning_timeout(const SessionHandle_t sess_hdl, const int8_t dev_id, const int32_t msecs) {

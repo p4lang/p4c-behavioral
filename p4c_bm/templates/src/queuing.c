@@ -108,7 +108,7 @@ static void *pkt_processing_loop(void *arg) {
     }
     else {
       RMT_LOG(P4_LOG_LEVEL_VERBOSE, "mirror id is %d\n", mirror_id);
-      egress_port = ${pd_prefix}mirroring_mapping_get_egress_port(mirror_id);
+      egress_port = p4_pd_mirroring_mapping_get_egress_port(mirror_id);
       if (egress_port < 0) {
 	RMT_LOG(P4_LOG_LEVEL_WARN,
 		"no mapping for mirror id %d, dropping packet\n", mirror_id);
