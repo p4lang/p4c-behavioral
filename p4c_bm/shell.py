@@ -136,6 +136,7 @@ def main():
                                            args.meta_config,
                                            args.public_inc_path,
                                            dump_yaml = args.dump_yaml)
+    render_dict['hlir'] = h
 
     if args.openflow_mapping_dir and args.openflow_mapping_mod:
         sys.path.append(args.openflow_mapping_dir)
